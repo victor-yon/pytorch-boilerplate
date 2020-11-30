@@ -10,11 +10,20 @@ class MockClassificationDataset(Dataset):
     """
 
     def __init__(self, nb_classes: int = 2, data_point_per_class: int = 100):
+        """
+        Create a random dataset.
+
+        :param nb_classes: Number of class
+        :param data_point_per_class: Number of data point per class
+        """
         self._nb_classes = nb_classes
         self._data_point_per_class = data_point_per_class
+
         self._features = np.zeros((nb_classes * data_point_per_class, 2), dtype=np.single)
         self._labels = np.zeros(nb_classes * data_point_per_class, dtype=np.int_)
 
+        # Generate points for each classes with normal distribution.
+        # Every class have a different center.
         for cl in range(nb_classes):
             index_start = cl * data_point_per_class
             index_end = cl * data_point_per_class + data_point_per_class
@@ -29,7 +38,10 @@ class MockClassificationDataset(Dataset):
     def __getitem__(self, index):
         return self._features[index], self._labels[index]
 
-    def show_plot(self):
+    def show_plot(self) -> None:
+        """
+        Create a plot that represent the dataset and show it.
+        """
         sns.scatterplot(x=self._features[:, 0],
                         y=self._features[:, 1],
                         hue=self._labels,

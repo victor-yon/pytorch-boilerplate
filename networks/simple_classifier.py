@@ -6,7 +6,18 @@ from torch import optim
 
 
 class SimpleClassifier(nn.Module):
+    """
+    Simple classifier neural network.
+    Should be use as an example.
+    """
+
     def __init__(self, input_size: int, nb_classes: int):
+        """
+        Create a new network with 2 hidden layers fully connected.
+
+        :param input_size: The size of one item of the dataset used for the training
+        :param nb_classes: Number of class to classify
+        """
         super().__init__()
 
         self.fc1 = nn.Linear(input_size, 50)  # Input -> Hidden 1
@@ -16,13 +27,26 @@ class SimpleClassifier(nn.Module):
         self._criterion = nn.CrossEntropyLoss()
         self._optimizer = optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
 
-    def forward(self, x):
+    def forward(self, x: Any) -> Any:
+        """
+        Define the forward logic.
+
+        :param x: One input of the dataset
+        :return: The output of the network
+        """
         x = f.relu(self.fc1(x))
         x = f.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
     def training_step(self, inputs: Any, labels: Any):
+        """
+        Define the logic for one training step.
+
+        :param inputs: The input from the training dataset, could be a batch or an item
+        :param labels: The label of the item or the batch
+        :return: The loss value
+        """
         # Zero the parameter gradients
         self._optimizer.zero_grad()
 
