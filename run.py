@@ -6,11 +6,19 @@ import torch
 from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
 
+from utils.logger import logger
+from utils.settings import settings
+
 
 def preparation() -> None:
     """
     Prepare the environment before all operations.
     """
+
+    # Settings are automatically loaded with the first import
+
+    # Load logger
+    logger.setLevel(settings.logger_output_level)
 
     # Set random seeds for reproducibility
     random.seed(42)
@@ -20,10 +28,13 @@ def preparation() -> None:
     # Set plot style
     sns.set_theme()
 
+    # Print settings
+    logger.info(settings)
+
 
 def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=None) -> None:
     """
-    Run the training and the testing og the network.
+    Run the training and the testing of the network.
 
     :param train_dataset: The training dataset
     :param test_dataset: The testing dataset
@@ -37,10 +48,10 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     network.to(device)
 
     # Use the pyTorch data loader
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=2)
+    train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=2)
 
     # Iterate epoch
-    for epoch in range(4):
+    for epoch in range(settings.nb_epoch):
         # Iterate batches
         for i, data in enumerate(train_loader):
             # Get the inputs; data is a list of [inputs, labels]
