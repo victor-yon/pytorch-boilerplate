@@ -22,6 +22,7 @@ class Settings:
     run_name: str = ''
 
     logger_output_level: Union[str, int] = 'INFO'
+    show_images: bool = False
 
     nb_classes: int = 4
     train_point_per_class: int = 200
@@ -34,6 +35,7 @@ class Settings:
         """
         Validate settings.
         """
+        # TODO automatically check type based on type hint
         # TODO check if run_name have valid character for a file
         assert self.logger_output_level in ['CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG',
                                             'NOTSET'] or isinstance(self.logger_output_level, int), 'Invalid log level'

@@ -7,6 +7,7 @@ from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
 
 from utils.logger import logger
+from utils.output import init_out_directory
 from utils.settings import settings
 
 
@@ -30,6 +31,9 @@ def preparation() -> None:
 
     # Print settings
     logger.info(settings)
+
+    # Create the output directory to save results and plots
+    init_out_directory()
 
 
 def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=None) -> None:

@@ -3,6 +3,8 @@ import numpy as np
 import seaborn as sns
 from torch.utils.data import Dataset
 
+from utils.output import save_plot
+
 
 class MockClassificationDataset(Dataset):
     """
@@ -47,4 +49,4 @@ class MockClassificationDataset(Dataset):
                         hue=self._labels,
                         markers=True)
         plt.title(f'Data from {self._nb_classes} classes')
-        plt.show()
+        save_plot('mock_dataset')
