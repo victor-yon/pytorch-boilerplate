@@ -62,6 +62,8 @@ class Settings:
 
         # TODO deal with unknown arguments with a warning
         for name, value in vars(p.parse_args()).items():
+            if name == 'settings':
+                continue
             if value is not None:
                 # Directly set the value to bypass the "__setattr__" function
                 self.__dict__[name] = value
