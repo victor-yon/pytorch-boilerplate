@@ -84,7 +84,7 @@ class Settings:
                            type=str_to_bool if type(value) == bool else type(value))
 
         # TODO deal with unknown arguments with a warning
-        # Load arguments form file, environment, command line to override the defaults
+        # Load arguments form file, environment and command line to override the defaults
         for name, value in vars(p.parse_args()).items():
             if name == 'settings':
                 continue

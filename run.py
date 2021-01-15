@@ -7,6 +7,7 @@ from torch.nn import Module
 from torch.utils.data import Dataset, DataLoader
 
 from utils.logger import logger
+from utils.metrics import network_metrics
 from utils.output import init_out_directory
 from utils.settings import settings
 
@@ -43,6 +44,7 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     :param train_dataset: The training dataset
     :param test_dataset: The testing dataset
     :param network: The neural network to train
+    :param device: The device to use for pytorch (None = auto)
     """
     # Automatically chooses between CPU and GPU if not specified
     if device is None:
@@ -50,6 +52,10 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
 
     # Send the network to the selected device (CPU or CUDA)
     network.to(device)
+    # TODO send the dataset to device too
+
+    # Save network stats and show if debug enable
+    network_metrics(network, test_dataset[0][0].shape, device)
 
     # Use the pyTorch data loader
     train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=2)
