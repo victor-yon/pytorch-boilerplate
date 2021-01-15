@@ -22,7 +22,10 @@ class Settings:
 
     run_name: str = ''
 
-    logger_output_level: Union[str, int] = 'INFO'
+    # Logging and outputs
+    logger_console_level: Union[str, int] = 'INFO'
+    logger_file_level: Union[str, int] = 'DEBUG'
+    logger_file_enable: bool = True
     show_images: bool = True
 
     nb_classes: int = 4
@@ -38,8 +41,11 @@ class Settings:
         """
         # TODO automatically check type based on type hint
         # TODO check if run_name have valid character for a file
-        assert self.logger_output_level in ['CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG',
-                                            'NOTSET'] or isinstance(self.logger_output_level, int), 'Invalid log level'
+        possible_log_levels = ['CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET']
+        assert self.logger_console_level in possible_log_levels or isinstance(self.logger_console_level, int), \
+            f"Invalid console log level '{self.logger_console_level}'"
+        assert self.logger_file_level in possible_log_levels or isinstance(self.logger_file_level, int), \
+            f"Invalid file log level '{self.logger_file_level}'"
 
         assert self.nb_classes > 0, 'At least one class is required'
         assert self.train_point_per_class > 0, 'At least one training point is required'

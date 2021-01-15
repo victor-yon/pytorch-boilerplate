@@ -27,6 +27,7 @@ def init_out_directory() -> None:
             (run_dir / 'settings.yaml').unlink(missing_ok=True)
             (run_dir / 'results.yaml').unlink(missing_ok=True)
             (run_dir / 'network_info.yaml').unlink(missing_ok=True)
+            (run_dir / 'run.log').unlink(missing_ok=True)
 
             # Remove images
             if img_dir.is_dir():
@@ -38,9 +39,13 @@ def init_out_directory() -> None:
             # Remove tmp directory
             run_dir.rmdir()
 
+    # Create the directories
     img_dir.mkdir(parents=True)
-
     logger.info(f'Output directory created: {run_dir}')
+
+    # Init the logger file
+    if settings.logger_file_enable:
+        logger.enable_log_file(file_path=(run_dir / 'run.log'), file_log_level=settings.logger_file_level)
 
     parameter_file = run_dir / 'settings.yaml'
     with open(parameter_file, 'w+') as f:
