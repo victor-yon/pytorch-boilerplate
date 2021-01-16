@@ -82,6 +82,7 @@ class Settings:
                        help='path to custom configuration file')
 
         # Create argument for each attribute of this class
+        # TODO create automatic helper with doc string or annotation
         for name, value in asdict(self).items():
             p.add_argument(f'--{name.replace("_", "-")}',
                            f'--{name}',

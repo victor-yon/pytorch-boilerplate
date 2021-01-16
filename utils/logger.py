@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Optional, TextIO, Union
 
 
+# TODO implement a timer with a wrapper (https://towardsdatascience.com/using-wrappers-to-log-in-python-ccffe4c46b54)
+
 class ColorFormatter(logging.Formatter):
     """
     Logging formatter supporting colored output.
@@ -13,10 +15,10 @@ class ColorFormatter(logging.Formatter):
     # See https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
     COLOR_CODES = {
         logging.CRITICAL: "\033[1;41m\033[97m",  # background red with white bold text
-        logging.ERROR: "\033[1;31m",  # bold red
-        logging.WARNING: "\033[0;33m",  # yellow
+        logging.ERROR: "\033[1;31m",  # bold red text
+        logging.WARNING: "\033[0;33m",  # yellow text
         logging.INFO: "",  # default color
-        logging.DEBUG: "\033[0;37m"  # light gray
+        logging.DEBUG: "\033[0;37m"  # light gray text
     }
 
     RESET_CODE = "\033[0m"
@@ -29,6 +31,9 @@ class ColorFormatter(logging.Formatter):
 
 
 class SexyLogger(logging.Logger):
+    """
+    A logger which handle console with fancy color and file output.
+    """
     console_handler: logging.Handler = None
     file_handler: logging.Handler = None
 
