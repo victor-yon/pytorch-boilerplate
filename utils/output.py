@@ -1,4 +1,3 @@
-import glob
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -32,8 +31,8 @@ def init_out_directory() -> None:
             # Remove images
             if img_dir.is_dir():
                 # Remove png images files
-                for png_file in glob.glob(str(img_dir / '*.png')):
-                    Path(png_file).unlink()
+                for png_file in img_dir.glob('*.png'):
+                    png_file.unlink()
                 img_dir.rmdir()
 
             # Remove tmp directory
