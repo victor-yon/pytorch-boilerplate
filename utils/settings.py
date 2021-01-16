@@ -7,7 +7,7 @@ import configargparse
 from utils.logger import logger
 
 
-@dataclass(init=True, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False)
+@dataclass(init=False, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False)
 class Settings:
     """
     Storing all settings for this program with default values.
@@ -53,6 +53,12 @@ class Settings:
 
         assert self.batch_size > 0, 'Batch size should be a positive integer'
         assert self.nb_epoch > 0, 'Number of epoch should be at least 1'
+
+    def __init__(self):
+        """
+        Create the setting object.
+        """
+        self._load_file_and_cmd()
 
     def _load_file_and_cmd(self) -> None:
         """
@@ -100,12 +106,6 @@ class Settings:
                 self.__dict__[name] = value
 
         self.validate()
-
-    def __post_init__(self):
-        """
-        Called after the init of this object.
-        """
-        self._load_file_and_cmd()
 
     def __setattr__(self, name, value) -> None:
         """
