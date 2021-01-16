@@ -10,18 +10,22 @@ class ColorFormatter(logging.Formatter):
     """
 
     # TODO check color working on windows (see https://stackoverflow.com/a/61043789/2666094)
+    # See https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
     COLOR_CODES = {
-        logging.CRITICAL: "\033[1;35m",  # bright/bold magenta
-        logging.ERROR: "\033[1;31m",  # bright/bold red
-        logging.WARNING: "\033[0;33m",  # bright/bold yellow
+        logging.CRITICAL: "\033[1;41m\033[97m",  # background red with white bold text
+        logging.ERROR: "\033[1;31m",  # bold red
+        logging.WARNING: "\033[0;33m",  # yellow
         logging.INFO: "",  # default color
-        logging.DEBUG: "\033[0;37m"  # white / light gray
+        logging.DEBUG: "\033[0;37m"  # light gray
     }
 
     RESET_CODE = "\033[0m"
 
     def format(self, record):
-        return self.COLOR_CODES[record.levelno] + super().format(record) + self.RESET_CODE
+        if record.levelno in self.COLOR_CODES:
+            return self.COLOR_CODES[record.levelno] + super().format(record) + self.RESET_CODE
+        else:
+            return super().format(record)
 
 
 class SexyLogger(logging.Logger):
