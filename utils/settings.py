@@ -13,13 +13,14 @@ class Settings:
     Storing all settings for this program with default values.
     Setting are loaded from (last override first):
         - default values (in this file)
-        - local file (default: ./settings.yaml)
+        - local file (default path: ./settings.yaml)
         - environment variables
         - arguments of the command line (with "--" in front)
 
     TODO create a parent class to wrap all the logic
     """
 
+    # Name of the run to save the result ('tmp' for temporary files)
     run_name: str = ''
 
     # Logging and outputs
@@ -27,6 +28,9 @@ class Settings:
     logger_file_level: Union[str, int] = 'DEBUG'
     logger_file_enable: bool = True
     show_images: bool = True
+
+    # Cache
+    use_trained_network_cache: bool = True
 
     nb_classes: int = 4
     train_point_per_class: int = 200

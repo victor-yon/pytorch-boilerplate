@@ -4,8 +4,9 @@ import numpy as np
 import seaborn as sns
 import torch
 from torch.nn import Module
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
+from train import train
 from utils.logger import logger
 from utils.metrics import network_metrics
 from utils.output import init_out_directory
@@ -50,6 +51,8 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    logger.debug(f'pyTorch device selected: {device}')
+
     # Send the network to the selected device (CPU or CUDA)
     network.to(device)
     # TODO send the dataset to device too
@@ -57,15 +60,5 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     # Save network stats and show if debug enable
     network_metrics(network, test_dataset[0][0].shape, device)
 
-    # Use the pyTorch data loader
-    train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=2)
-
-    # Iterate epoch
-    for epoch in range(settings.nb_epoch):
-        # Iterate batches
-        for i, data in enumerate(train_loader):
-            # Get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-
-            # Run a training set for these data
-            loss = network.training_step(inputs, labels)
+    # Start the training
+    train(train_dataset, test_dataset, network)
