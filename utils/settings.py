@@ -30,6 +30,9 @@ class Settings:
     show_images: bool = True
     save_network: bool = True
 
+    # Cache
+    trained_network_cache_path: str = ''
+
     # Dataset
     nb_classes: int = 4
     train_point_per_class: int = 200

@@ -3,11 +3,15 @@ from torch.utils.data import Dataset, DataLoader
 
 from plots.misc import plot_losses
 from utils.logger import logger
-from utils.output import save_network
+from utils.output import save_network, load_network
 from utils.settings import settings
 
 
 def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> None:
+    # If path set, try to load a pre trained network from cache
+    if settings.trained_network_cache_path and load_network(network, settings.trained_network_cache_path):
+        return  # Stop here if the network parameters are successfully loaded from cache file
+
     logger.info('Start network training...')
 
     # Turn on the training mode of the network

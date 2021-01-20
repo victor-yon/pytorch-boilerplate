@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import matplotlib.pyplot as plt
 import torch
@@ -113,17 +113,18 @@ def save_network(network: Module, file_name: str = 'network') -> None:
     logger.info(f'Network saved ({cache_path})')
 
 
-def load_network(network: Module, file_name: str = 'network') -> bool:
+def load_network(network: Module, file_path: Union[str, Path]) -> bool:
     """
     Load a full description of the network parameters and states from a previous save file.
 
     :param network: The network to load into (in place)
-    :param file_name: The name of the file to load (without the extension)
+    :param file_path: The path to the file to load
     :return: True if the file exist and is loaded, False if the file is not found.
     """
-    cache_path = Path(OUT_DIR, settings.run_name, file_name + '.p')
+    cache_path = Path(file_path) if isinstance(file_path, str) else file_path
     if cache_path.is_file():
         network.load_state_dict(torch.load(cache_path))
         logger.info(f'Network loaded ({cache_path})')
         return True
+    logger.warning(f'Network cache not found in "{cache_path}"')
     return False
