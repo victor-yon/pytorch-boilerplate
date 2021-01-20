@@ -3,6 +3,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from plots.misc import plot_losses
 from utils.logger import logger
+from utils.output import save_network
 from utils.settings import settings
 
 
@@ -36,3 +37,6 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
     plot_losses(loss_evolution)
 
     logger.info('Network training competed')
+
+    if settings.save_network:
+        save_network(network, 'trained_network')

@@ -28,10 +28,9 @@ class Settings:
     logger_file_level: Union[str, int] = 'DEBUG'
     logger_file_enable: bool = True
     show_images: bool = True
+    save_network: bool = True
 
-    # Cache
-    use_trained_network_cache: bool = True
-
+    # Dataset
     nb_classes: int = 4
     train_point_per_class: int = 200
     test_point_per_class: int = 50
