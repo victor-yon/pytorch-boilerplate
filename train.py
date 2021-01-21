@@ -37,10 +37,10 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
             loss = network.training_step(inputs, labels)
             loss_evolution.append(float(loss))
 
+    logger.info('Network training competed')
+
     # Post train plots
     plot_losses(loss_evolution)
-
-    logger.info('Network training competed')
 
     if settings.save_network:
         save_network(network, 'trained_network')

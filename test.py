@@ -1,7 +1,9 @@
+import numpy as np
 import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
+from plots.misc import plot_confusion_matrix
 from utils.logger import logger
 from utils.settings import settings
 
@@ -15,9 +17,11 @@ def test(test_dataset: Dataset, network: Module) -> float:
     # Use the pyTorch data loader
     test_loader = DataLoader(test_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=4)
     nb_batch = len(test_loader)
+    nb_classes = len(test_dataset.classes)
 
     nb_correct = 0
     nb_total = 0
+    nb_labels_predictions = np.zeros((nb_classes, nb_classes))
     # Diable gradient for performances
     with torch.no_grad():
         # Iterate batches
@@ -32,10 +36,17 @@ def test(test_dataset: Dataset, network: Module) -> float:
             # Count the result
             nb_total += len(labels)
             nb_correct += torch.eq(predicted, labels).sum()
+            for label, pred in zip(labels, predicted):
+                nb_labels_predictions[label][pred] += 1
 
     accuracy = float(nb_correct / nb_total)
     logger.info(f'Test overall accuracy: {accuracy * 100:05.2f}%')
+    logger.info(f'Test accuracy per classes:\n\t' +
+                "\n\t".join([f'{test_dataset.classes[i]}: '
+                             f'{(l[i] / np.sum(l)) * 100:05.2f}%' for i, l in enumerate(nb_labels_predictions)]))
 
     logger.info('Network testing competed')
+
+    plot_confusion_matrix(nb_labels_predictions, class_names=test_dataset.classes)
 
     return accuracy

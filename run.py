@@ -28,7 +28,10 @@ def preparation() -> None:
     init_out_directory()
 
     # Set plot style
-    sns.set_theme()
+    sns.set_theme(rc={
+        "axes.titlesize": 15,
+        "axes.labelsize": 13}
+    )
 
     # Set random seeds for reproducibility
     random.seed(42)

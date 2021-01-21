@@ -19,6 +19,7 @@ class MockClassificationDataset(Dataset):
         :param data_point_per_class: Number of data point per class
         """
         self._nb_classes = nb_classes
+        self.classes = ['class ' + str(i) for i in range(self._nb_classes)]
         self._data_point_per_class = data_point_per_class
 
         self._features = np.zeros((nb_classes * data_point_per_class, 2), dtype=np.single)

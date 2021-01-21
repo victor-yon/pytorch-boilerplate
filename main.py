@@ -15,7 +15,7 @@ if __name__ == '__main__':
     test_set = MockClassificationDataset(settings.nb_classes, settings.test_point_per_class)
 
     # Build the network
-    net = SimpleClassifier(input_size=2, nb_classes=settings.nb_classes)
+    net = SimpleClassifier(input_size=2, nb_classes=len(train_set.classes))
 
     # Run the training and the test
     run(train_set, test_set, net)
