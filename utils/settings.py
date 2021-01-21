@@ -23,21 +23,20 @@ class Settings:
     # Name of the run to save the result ('tmp' for temporary files)
     run_name: str = ''
 
-    # Logging and outputs
+    # ======================== Logging and outputs ========================
     logger_console_level: Union[str, int] = 'INFO'
     logger_file_level: Union[str, int] = 'DEBUG'
     logger_file_enable: bool = True
     show_images: bool = True
     save_network: bool = True
-
-    # Cache
     trained_network_cache_path: str = ''
 
-    # Dataset
+    # ============================== Dataset ==============================
     nb_classes: int = 4
     train_point_per_class: int = 200
     test_point_per_class: int = 50
 
+    # ========================= Training settings =========================
     batch_size: int = 4
     nb_epoch: int = 4
 
