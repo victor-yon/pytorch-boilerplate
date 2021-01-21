@@ -10,7 +10,7 @@ from test import test
 from train import train
 from utils.logger import logger
 from utils.metrics import network_metrics
-from utils.output import init_out_directory, save_results
+from utils.output import init_out_directory
 from utils.settings import settings
 
 
@@ -69,5 +69,4 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     train(train_dataset, test_dataset, network)
 
     # Start normal test
-    accuracy = test(test_dataset, network)
-    save_results(accuracy=accuracy)
+    test(test_dataset, network)
