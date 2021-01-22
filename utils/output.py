@@ -4,6 +4,7 @@ from typing import Any, Union
 
 import matplotlib.pyplot as plt
 import torch
+import yaml
 from torch.nn import Module
 
 from utils.logger import logger
@@ -63,7 +64,7 @@ def init_out_directory() -> None:
 
     parameter_file = run_dir / 'settings.yaml'
     with open(parameter_file, 'w+') as f:
-        f.write('\n'.join([f'{name}: {str(value)}' for name, value in asdict(settings).items()]))
+        yaml.dump(asdict(settings), f)
 
     logger.debug(f'Parameters saved in {parameter_file}')
 
@@ -82,7 +83,7 @@ def save_network_info(network_metrics: dict) -> None:
     run_dir = Path(OUT_DIR, settings.run_name)
     network_info_file = run_dir / 'network_info.yaml'
     with open(network_info_file, 'w+') as f:
-        f.write('\n'.join([f'{name}: {str(value)}' for name, value in network_metrics.items()]))
+        yaml.dump(network_metrics, f)
 
     logger.debug(f'Network info saved in {network_info_file}')
 
@@ -102,8 +103,7 @@ def save_results(**results: Any) -> None:
 
     # Append to the file, create it if necessary
     with open(results_path, 'a') as f:
-        for label, value in results.items():
-            f.write(f'{label}: {str(value)}\n')
+        yaml.dump(results, f)
 
     logger.debug(f'{len(results)} result(s) saved in {results_path}')
 

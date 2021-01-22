@@ -26,7 +26,7 @@ def network_metrics(network: Module, input_dim: List, device: Optional[torch.dev
 
     metrics = {
         'name': type(network).__name__,
-        'device': device,
+        'device': str(device),
         'total_params': network_info.total_params,
         'trainable_params': network_info.trainable_params,
         'non_trainable_params': network_info.total_params - network_info.trainable_params,

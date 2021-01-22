@@ -3,4 +3,5 @@ numpy>=1.19.5
 matplotlib>=3.3.3
 seaborn>=0.11.1
 configargparse>=1.2.3
-torchinfo>=0.0.4
+torchinfo>=0.0.5
+pyyaml>=5.4.1

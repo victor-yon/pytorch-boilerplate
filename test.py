@@ -48,10 +48,10 @@ def test(test_dataset: Dataset, network: Module) -> float:
                 nb_labels_predictions[label][pred] += 1
 
     accuracy = float(nb_correct / nb_total)
-    classes_accuracy = {test_dataset.classes[i]: l[i] / np.sum(l) for i, l in enumerate(nb_labels_predictions)}
+    classes_accuracy = [float(l[i] / np.sum(l)) for i, l in enumerate(nb_labels_predictions)]
     logger.info(f'Test overall accuracy: {accuracy * 100:05.2f}%')
     logger.info(f'Test accuracy per classes:\n\t' +
-                "\n\t".join([f'{cls}: {accuracy * 100:05.2f}%' for cls, accuracy in classes_accuracy.items()]))
+                "\n\t".join([f'{test_dataset.classes[i]}: {a * 100:05.2f}%' for i, a in enumerate(classes_accuracy)]))
 
     logger.info('Network testing competed')
 
