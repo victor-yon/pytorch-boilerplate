@@ -7,7 +7,7 @@ if __name__ == '__main__':
     # Set plot style
     set_plot_style()
     # Load selected runs' files
-    data = load_runs('*')
+    data = load_runs('train-size-*')
 
     # Effect of the number of train point per class
     sns.lineplot(data=data, x='settings.train_point_per_class', y='results.accuracy')

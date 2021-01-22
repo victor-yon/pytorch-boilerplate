@@ -34,8 +34,9 @@ class SexyLogger(logging.Logger):
     """
     A logger which handle console with fancy color and file output.
     """
+    # TODO handle exceptions
     console_handler: logging.Handler = None
-    file_handler: logging.Handler = None
+    file_handler: Optional[logging.Handler] = None
 
     def __init__(self,
                  logger_name: str,
@@ -109,9 +110,9 @@ class SexyLogger(logging.Logger):
                 (see https://docs.python.org/3/library/logging.html#logrecord-attributes)
         """
 
-        # Skip all if already set
+        # Check that the log file is not already set
         if self.file_handler is not None:
-            return
+            raise RuntimeError('Tried to enable the log file when a file handler is already set.')
 
         # Convert and check path
         if isinstance(file_path, str):
@@ -126,6 +127,19 @@ class SexyLogger(logging.Logger):
         self.file_handler.setFormatter(logging.Formatter(fmt=file_template, datefmt=file_date_template))
         self.set_file_level(file_log_level)
         self.addHandler(self.file_handler)
+
+    def disable_log_file(self):
+        """
+        Disable the log file handler.
+        """
+
+        # Check that the log file is set
+        if self.file_handler is None:
+            raise RuntimeError('Tried to disable the log file when no file handler is set.')
+
+        self.file_handler.close()
+        self.removeHandler(self.file_handler)
+        self.file_handler = None
 
     def set_console_level(self, level: Union[int, str]) -> None:
         """

@@ -1,9 +1,10 @@
 from datasets.mock_classification_dataset import MockClassificationDataset
 from networks.simple_classifier import SimpleClassifier
-from run import preparation, run
+from run import preparation, run, clean_up
 from utils.settings import settings
 
-if __name__ == '__main__':
+
+def main():
     # Prepare the environment
     preparation()
 
@@ -19,3 +20,10 @@ if __name__ == '__main__':
 
     # Run the training and the test
     run(train_set, test_set, net)
+
+    # Clean up the environment, ready for a new run
+    clean_up()
+
+
+if __name__ == '__main__':
+    main()

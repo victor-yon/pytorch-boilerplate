@@ -38,6 +38,16 @@ def preparation() -> None:
     logger.info(settings)
 
 
+def clean_up() -> None:
+    """
+    Clean up the environment after all operations. After that a new run can start again.
+    """
+
+    # Disable the log file, so a new one can be set later
+    if settings.run_name and settings.logger_file_enable:
+        logger.disable_log_file()
+
+
 def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=None) -> None:
     """
     Run the training and the testing of the network.
