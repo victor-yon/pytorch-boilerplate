@@ -3,6 +3,9 @@ from utils.logger import logger
 from utils.settings import settings
 
 if __name__ == '__main__':
+    # TODO make a dataclass for planning, which implements iterate
+    # TODO add train once option
+    # TODO skip existing runs names
     planning = {
         'train_point_per_class': {'name': 'train-size', 'range': range(10, 501, 10)}
     }

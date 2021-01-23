@@ -36,6 +36,7 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
             # Run a training set for these data
             loss = network.training_step(inputs, labels)
             loss_evolution.append(float(loss))
+            # TODO test between each epoch, disable with a setting
 
     logger.info('Network training competed')
 

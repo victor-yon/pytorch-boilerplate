@@ -206,10 +206,12 @@ def load_runs(pattern: str) -> pd.DataFrame:
     :param pattern: The pattern to filter runs
     :return: A dataframe containing all information, with the columns as "file.key"
     """
+    # TODO accept a list of patterns
     data = []
 
     runs_dir = Path(OUT_DIR)
     for run_dir in runs_dir.glob(pattern):
         data.append(load_run_files(run_dir))
 
+    # TODO remove columns where nothing change and return them as a vector
     return pd.DataFrame(data)

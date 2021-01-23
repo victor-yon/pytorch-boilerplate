@@ -14,8 +14,8 @@ class ColorFormatter(logging.Formatter):
     # TODO check color working on windows (see https://stackoverflow.com/a/61043789/2666094)
     # See https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
     COLOR_CODES = {
-        logging.CRITICAL: "\033[1;41m\033[97m",  # background red with white bold text
-        logging.ERROR: "\033[1;31m",  # bold red text
+        logging.CRITICAL: "\033[1;31m",  # bold red text
+        logging.ERROR: "\033[0;91m",  # bright red text
         logging.WARNING: "\033[0;33m",  # yellow text
         logging.INFO: "",  # default color
         logging.DEBUG: "\033[0;37m"  # light gray text
@@ -34,7 +34,7 @@ class SexyLogger(logging.Logger):
     """
     A logger which handle console with fancy color and file output.
     """
-    # TODO handle exceptions
+    # TODO add message console highlight option
     console_handler: logging.Handler = None
     file_handler: Optional[logging.Handler] = None
 
@@ -173,5 +173,6 @@ class SexyLogger(logging.Logger):
         self.setLevel(min(self.console_handler.level, self.file_handler.level))
 
 
+# TODO dynamic name with the template
 # Create the logger singleton
 logger: SexyLogger = SexyLogger(logger_name='pytorch-boilerplate')
