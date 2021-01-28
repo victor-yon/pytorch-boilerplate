@@ -7,6 +7,7 @@ from plots.misc import plot_confusion_matrix
 from utils.logger import logger
 from utils.output import save_results
 from utils.settings import settings
+from utils.timer import SectionTimer
 
 
 def test(test_dataset: Dataset, network: Module) -> float:
@@ -17,7 +18,6 @@ def test(test_dataset: Dataset, network: Module) -> float:
     :param network: The network to use
     :return: The overall accuracy
     """
-    logger.info('Start network testing...')
 
     # Turn on the inference mode of the network
     network.eval()
@@ -31,7 +31,7 @@ def test(test_dataset: Dataset, network: Module) -> float:
     nb_total = 0
     nb_labels_predictions = np.zeros((nb_classes, nb_classes))
     # Diable gradient for performances
-    with torch.no_grad():
+    with torch.no_grad(), SectionTimer('network testing'):
         # Iterate batches
         for i, data in enumerate(test_loader):
             # Get the inputs: data is a list of [inputs, labels]
@@ -52,8 +52,6 @@ def test(test_dataset: Dataset, network: Module) -> float:
     logger.info(f'Test overall accuracy: {accuracy * 100:05.2f}%')
     logger.info(f'Test accuracy per classes:\n\t' +
                 "\n\t".join([f'{test_dataset.classes[i]}: {a * 100:05.2f}%' for i, a in enumerate(classes_accuracy)]))
-
-    logger.info('Network testing competed')
 
     results = {f'accuracy': accuracy, f'classes_accuracy': classes_accuracy}
     save_results(**results)

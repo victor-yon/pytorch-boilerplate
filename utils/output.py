@@ -1,3 +1,4 @@
+import re
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Union
@@ -7,6 +8,7 @@ import pandas as pd
 import seaborn as sns
 import torch
 import yaml
+from codetiming import Timer
 from torch.nn import Module
 
 from utils.logger import logger
@@ -16,7 +18,8 @@ OUT_DIR = './out'
 OUT_FILES = {
     'settings': 'settings.yaml',
     'results': 'results.yaml',
-    'network_info': 'network_info.yaml'
+    'network_info': 'network_info.yaml',
+    'timers': 'timers.yaml'
 }
 
 
@@ -62,7 +65,7 @@ def init_out_directory() -> None:
 
     # Create the directories
     img_dir.mkdir(parents=True)
-    logger.info(f'Output directory created: {run_dir}')
+    logger.debug(f'Output directory created: {run_dir}')
 
     # Init the logger file
     if settings.logger_file_enable:
@@ -75,6 +78,17 @@ def init_out_directory() -> None:
     logger.debug(f'Parameters saved in {parameter_file}')
 
 
+def set_plot_style():
+    """
+    Set plot style.
+    """
+    sns.set_theme(rc={
+        'axes.titlesize': 15,
+        'axes.labelsize': 13,
+        'figure.autolayout': True
+    })
+
+
 def save_network_info(network_metrics: dict) -> None:
     """
     Save metrics information in a file in the run directory.
@@ -82,12 +96,12 @@ def save_network_info(network_metrics: dict) -> None:
     :param network_metrics: The dictionary of metrics with their values.
     """
 
-    # Skip saving if the name of the run is not set
-    if not settings.run_name:
+    # Skip saving if the name of the run is not set or nothing to save
+    if not settings.run_name or len(network_metrics) == 0:
         return
 
-    run_dir = Path(OUT_DIR, settings.run_name)
-    network_info_file = run_dir / OUT_FILES['network_info']
+    network_info_file = Path(OUT_DIR, settings.run_name, OUT_FILES['network_info'])
+
     with open(network_info_file, 'w+') as f:
         yaml.dump(network_metrics, f)
 
@@ -114,17 +128,6 @@ def save_results(**results: Any) -> None:
     logger.debug(f'{len(results)} result(s) saved in {results_path}')
 
 
-def set_plot_style():
-    """
-    Set plot style.
-    """
-    sns.set_theme(rc={
-        'axes.titlesize': 15,
-        'axes.labelsize': 13,
-        'figure.autolayout': True
-    })
-
-
 def save_plot(file_name: str) -> None:
     """
     Save a plot image in the directory
@@ -135,6 +138,7 @@ def save_plot(file_name: str) -> None:
         return
 
     save_path = Path(OUT_DIR, settings.run_name, 'img', f'{file_name}.png')
+
     plt.savefig(save_path)
     logger.debug(f'Plot saved in {save_path}')
 
@@ -156,7 +160,24 @@ def save_network(network: Module, file_name: str = 'network') -> None:
 
     cache_path = Path(OUT_DIR, settings.run_name, file_name + '.p')
     torch.save(network.state_dict(), cache_path)
-    logger.debug(f'Network saved ({cache_path})')
+    logger.debug(f'Network saved in {cache_path}')
+
+
+def save_timers() -> None:
+    """
+    Save the named timers in a file in the output directory.
+    """
+
+    # Skip saving if the name of the run is not set or nothing to save
+    if not settings.run_name or len(Timer.timers.data) == 0:
+        return
+
+    timers_file = Path(OUT_DIR, settings.run_name, OUT_FILES['timers'])
+    with open(timers_file, 'w+') as f:
+        # Save with replacing white spaces by '_' in timers name
+        yaml.dump({re.sub(r'\s+', '_', n.strip()): v for n, v in Timer.timers.data.items()}, f)
+
+    logger.debug(f'{len(Timer.timers.data)} timer(s) saved in {timers_file}')
 
 
 def load_network(network: Module, file_path: Union[str, Path]) -> bool:

@@ -9,7 +9,7 @@ from test import test
 from train import train
 from utils.logger import logger
 from utils.metrics import network_metrics
-from utils.output import init_out_directory, set_plot_style
+from utils.output import init_out_directory, save_timers, set_plot_style
 from utils.settings import settings
 
 
@@ -37,7 +37,7 @@ def preparation() -> None:
     np.random.seed(42)
 
     # Print settings
-    logger.info(settings)
+    logger.debug(settings)
 
 
 def clean_up() -> None:
@@ -79,3 +79,6 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
 
     # Start normal test
     test(test_dataset, network)
+
+    # Save recorded timers in a file
+    save_timers()
