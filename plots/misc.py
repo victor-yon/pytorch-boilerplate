@@ -14,6 +14,8 @@ def plot_losses(loss_evolution: List[float]) -> None:
     :param loss_evolution: A list of loss for each batch.
     """
     sns.relplot(data=loss_evolution, kind='line')
+    # TODO x as nb train sample instead of batch number (and add batch size in title)
+    # TODO add optional vertical lines for each epoch
     plt.title('Loss evolution')
     plt.xlabel('Batch number')
     plt.ylabel('Loss (Cross Entropy)')

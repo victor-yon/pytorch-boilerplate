@@ -26,6 +26,7 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
 
     # Iterate epoch
     for epoch in range(settings.nb_epoch):
+        # TODO print epoch loss
         logger.info(f'Start epoch {epoch + 1:03}/{settings.nb_epoch} ({epoch / settings.nb_epoch * 100:05.2f}%)')
 
         # Iterate batches
@@ -36,7 +37,9 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
             # Run a training set for these data
             loss = network.training_step(inputs, labels)
             loss_evolution.append(float(loss))
-            # TODO test between each epoch, disable with a setting
+            # TODO Log progress and loss based on time interval in debug
+            # TODO Print a visual loading bar, disable with settings
+            # TODO Test between each epoch, disable with a setting
 
     logger.info('Network training competed')
 
