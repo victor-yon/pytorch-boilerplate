@@ -175,6 +175,7 @@ def save_timers() -> None:
     timers_file = Path(OUT_DIR, settings.run_name, OUT_FILES['timers'])
     with open(timers_file, 'w+') as f:
         # Save with replacing white spaces by '_' in timers name
+        f.write('# Values in seconds\n')
         yaml.dump({re.sub(r'\s+', '_', n.strip()): v for n, v in Timer.timers.data.items()}, f)
 
     logger.debug(f'{len(Timer.timers.data)} timer(s) saved in {timers_file}')

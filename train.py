@@ -23,8 +23,8 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
     # Store the loss values for plot
     loss_evolution = []
 
-    # Iterate epoch
     with SectionTimer('network training'):
+        # Iterate epoch
         for epoch in range(settings.nb_epoch):
             # TODO print epoch loss
             logger.info(f'Start epoch {epoch + 1:02}/{settings.nb_epoch} ({epoch / settings.nb_epoch * 100:05.2f}%)')
