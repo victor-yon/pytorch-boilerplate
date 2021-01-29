@@ -23,8 +23,7 @@ def test(test_dataset: Dataset, network: Module) -> float:
     network.eval()
 
     # Use the pyTorch data loader
-    test_loader = DataLoader(test_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=4)
-    nb_batch = len(test_loader)
+    test_loader = DataLoader(test_dataset, batch_size=settings.batch_size, shuffle=False, num_workers=4)
     nb_classes = len(test_dataset.classes)
 
     nb_correct = 0
@@ -33,10 +32,7 @@ def test(test_dataset: Dataset, network: Module) -> float:
     # Diable gradient for performances
     with torch.no_grad(), SectionTimer('network testing'):
         # Iterate batches
-        for i, data in enumerate(test_loader):
-            # Get the inputs: data is a list of [inputs, labels]
-            inputs, labels = data
-
+        for i, (inputs, labels) in enumerate(test_loader):
             # Forward
             outputs = network(inputs)
             _, predicted = torch.max(outputs, 1)  # Get the index of the max value for each image of the batch

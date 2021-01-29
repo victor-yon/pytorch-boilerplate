@@ -21,7 +21,6 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
 
     # Use the pyTorch data loader
     train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=2)
-    nb_batch = len(train_loader)
 
     # Store the loss values for plot
     loss_evolution: List[float] = []
@@ -31,10 +30,7 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
         # Iterate epoch
         for epoch in range(settings.nb_epoch):
             # Iterate batches
-            for i, data in enumerate(train_loader):
-                # Get the inputs; data is a list of [inputs, labels]
-                inputs, labels = data
-
+            for i, (inputs, labels) in enumerate(train_loader):
                 # Run a training set for these data
                 loss = network.training_step(inputs, labels)
                 loss_evolution.append(float(loss))
@@ -47,11 +43,11 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
 
     save_results(epochs_stats=epochs_stats)
 
-    # Post train plots
-    plot_losses(loss_evolution)
-
     if settings.save_network:
         save_network(network, 'trained_network')
+
+    # Post train plots
+    plot_losses(loss_evolution)
 
 
 def _record_epoch_stats(epochs_stats: List[dict], epoch_losses: List[float]) -> None:
@@ -61,19 +57,18 @@ def _record_epoch_stats(epochs_stats: List[dict], epoch_losses: List[float]) -> 
     :param epochs_stats: The list where to store the stats, append in place.
     :param epoch_losses: The losses list of the current epoch.
     """
-    stats = dict()
-    stats['losses_mean'] = float(np.mean(epoch_losses))
+    stats = {
+        'losses_mean': float(np.mean(epoch_losses)),
+        'losses_std': float(np.std(epoch_losses))
+    }
 
     # Compute the loss difference with the previous epoch
-    losses_mean_diff = 0
-    if len(epochs_stats) > 0:
-        losses_mean_diff = stats['losses_mean'] - epochs_stats[-1]['losses_mean']
-    stats['losses_mean_diff'] = losses_mean_diff
+    stats['losses_mean_diff'] = 0 if len(epochs_stats) == 0 else stats['losses_mean'] - epochs_stats[-1]['losses_mean']
 
-    stats['losses_std'] = float(np.std(epoch_losses))
-
+    # Add stat to the list
     epochs_stats.append(stats)
 
+    # Log stats
     epoch_num = len(epochs_stats)
     logger.info(f"Epoch {epoch_num:3}/{settings.nb_epoch} ({epoch_num / settings.nb_epoch:7.2%}) "
                 f"| loss: {stats['losses_mean']:.5f} "
