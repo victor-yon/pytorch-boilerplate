@@ -1,24 +1,26 @@
 from datasets.mock_classification_dataset import MockClassificationDataset
 from networks.simple_classifier import SimpleClassifier
-from run import preparation, run, clean_up
+from run import clean_up, preparation, run
 from utils.logger import logger
 from utils.settings import settings
+from utils.timer import SectionTimer
 
 
-# TODO move all of this in run
 def main():
+    # TODO move all of this in run
     # Prepare the environment
     preparation()
 
     # Catch and log every exception during the runtime
     # noinspection PyBroadException
     try:
-        # Load the training dataset
-        train_set = MockClassificationDataset(settings.nb_classes, settings.train_point_per_class)
-        train_set.show_plot()  # Plot and show the data
+        with SectionTimer('datasets loading', 'debug'):
+            # Load the training dataset
+            train_set = MockClassificationDataset(settings.nb_classes, settings.train_point_per_class)
+            train_set.show_plot()  # Plot and show the data
 
-        # Load test testing dataset
-        test_set = MockClassificationDataset(settings.nb_classes, settings.test_point_per_class)
+            # Load test testing dataset
+            test_set = MockClassificationDataset(settings.nb_classes, settings.test_point_per_class)
 
         # Build the network
         net = SimpleClassifier(input_size=2, nb_classes=len(train_set.classes))

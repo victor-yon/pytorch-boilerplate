@@ -53,8 +53,7 @@ def test(test_dataset: Dataset, network: Module) -> float:
     logger.info(f'Test accuracy per classes:\n\t' +
                 "\n\t".join([f'{test_dataset.classes[i]}: {a * 100:05.2f}%' for i, a in enumerate(classes_accuracy)]))
 
-    results = {f'accuracy': accuracy, f'classes_accuracy': classes_accuracy}
-    save_results(**results)
+    save_results(accuracy=accuracy, classes_accuracy=classes_accuracy)
     plot_confusion_matrix(nb_labels_predictions, class_names=test_dataset.classes)
 
     return accuracy

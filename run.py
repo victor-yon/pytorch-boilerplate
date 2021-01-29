@@ -9,8 +9,9 @@ from test import test
 from train import train
 from utils.logger import logger
 from utils.metrics import network_metrics
-from utils.output import init_out_directory, save_timers, set_plot_style
+from utils.output import init_out_directory, save_results, save_timers, set_plot_style
 from utils.settings import settings
+from utils.timer import SectionTimer
 
 
 def preparation() -> None:
@@ -26,7 +27,8 @@ def preparation() -> None:
     # Create the output directory to save results and plots
     init_out_directory()
 
-    logger.info(f'Starting run' + f' "{settings.run_name}"' if settings.run_name else '')
+    if settings.run_name:
+        logger.info(f'Run name: {settings.run_name}')
 
     # Set plot style
     set_plot_style()
@@ -45,13 +47,15 @@ def clean_up() -> None:
     Clean up the environment after all operations. After that a new run can start again.
     """
 
-    logger.info(f'Ending run' + f' "{settings.run_name}"' if settings.run_name else '')
+    # Save recorded timers in a file
+    save_timers()
 
     # Disable the log file, so a new one can be set later
     if settings.run_name and settings.logger_file_enable:
         logger.disable_log_file()
 
 
+@SectionTimer('run')
 def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=None) -> None:
     """
     Run the training and the testing of the network.
@@ -80,5 +84,4 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     # Start normal test
     test(test_dataset, network)
 
-    # Save recorded timers in a file
-    save_timers()
+    save_results(success_run=True)
