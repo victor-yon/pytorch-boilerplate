@@ -33,14 +33,16 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
     accuracy_evolution: List[dict] = []
     epochs_stats: List[dict] = []
 
-    with SectionTimer('network training'):
+    with SectionTimer('network training') as timer:
         # Iterate epoch
         for epoch in range(settings.nb_epoch):
             # Iterate batches
             for i, (inputs, labels) in enumerate(train_loader):
 
                 if i in checkpoints_i:
+                    timer.pause()
                     accuracy_evolution.append(_checkpoint(network, epoch * nb_batch + i, train_dataset, test_dataset))
+                    timer.resume()
 
                 # Run a training set for these data
                 loss = network.training_step(inputs, labels)

@@ -17,6 +17,14 @@ class SectionTimer(Timer):
         :param log_level: The log level to use for the start and end messages
         """
         super().__init__(name=section_name)
+
+        # Add a started boolean to handle the pause an resume
+        self.started = False
+
+        # Disable default print
+        self.logger = None
+
+        # Check log level
         if isinstance(log_level, str):
             log_level = log_level.upper()
         # Use logging private method to check and convert the log level value
@@ -27,6 +35,7 @@ class SectionTimer(Timer):
         Override the start function of the parent object.
         """
         logger.log(self.log_level, f'Start {self.name}...')
+        self.started = True
         super().start()
 
     def stop(self) -> float:
@@ -49,6 +58,14 @@ class SectionTimer(Timer):
             self.timers.add(self.name, self.last)
 
         return self.last
+
+    def pause(self):
+        super().stop()
+
+    def resume(self):
+        if not self.started:
+            TimerError("A timer should be started before to be resumed")
+        super().start()
 
 
 def duration_to_str(sec: float, precision: int = 2):
