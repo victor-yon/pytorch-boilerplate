@@ -34,6 +34,7 @@ def preparation() -> None:
     set_plot_style()
 
     # Set random seeds for reproducibility
+    # TODO add a setting for seed
     random.seed(42)
     torch.manual_seed(42)
     np.random.seed(42)
@@ -82,6 +83,7 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     train(train_dataset, test_dataset, network)
 
     # Start normal test
-    test(test_dataset, network)
+    test(test_dataset, network, final=True)
 
+    # Arrived to the end successfully (no error)
     save_results(success_run=True)

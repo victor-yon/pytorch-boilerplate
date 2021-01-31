@@ -1,5 +1,5 @@
 import argparse
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from typing import Union
 
 import configargparse
@@ -31,6 +31,12 @@ class Settings:
     save_network: bool = True
     trained_network_cache_path: str = ''
 
+    # ============================ Checkpoints ============================
+    checkpoints_per_epoch: int = 0
+    checkpoint_test_size: int = 200
+    checkpoint_train_size: int = 200
+    checkpoint_save_network: bool = False
+
     # ============================== Dataset ==============================
     nb_classes: int = 4
     train_point_per_class: int = 200
@@ -52,6 +58,7 @@ class Settings:
         assert self.logger_file_level in possible_log_levels or isinstance(self.logger_file_level, int), \
             f"Invalid file log level '{self.logger_file_level}'"
 
+        assert self.checkpoints_per_epoch >= 1, 'The minimum number of checkpoints per epoch is 1'
         assert self.nb_classes > 0, 'At least one class is required'
         assert self.train_point_per_class > 0, 'At least one training point is required'
         assert self.test_point_per_class > 0, 'At least one testing point is required'

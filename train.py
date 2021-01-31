@@ -5,6 +5,7 @@ from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
 from plots.misc import plot_losses
+from test import test
 from utils.logger import logger
 from utils.output import load_network, save_network, save_results
 from utils.settings import settings
@@ -21,9 +22,15 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
 
     # Use the pyTorch data loader
     train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=2)
+    nb_batch = len(train_loader)
+
+    # Define the indexes of checkpoints for each epoch
+    # Eg.: with 'nb_batch' = 100 and 'checkpoints_per_epoch' = 3, then the indexes will be [0, 33, 66]
+    checkpoints_i = [int(i / settings.checkpoints_per_epoch * nb_batch) for i in range(settings.checkpoints_per_epoch)]
 
     # Store the loss values for plot
     loss_evolution: List[float] = []
+    accuracy_evolution: List[dict] = []
     epochs_stats: List[dict] = []
 
     with SectionTimer('network training'):
@@ -31,23 +38,61 @@ def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> Non
         for epoch in range(settings.nb_epoch):
             # Iterate batches
             for i, (inputs, labels) in enumerate(train_loader):
+
+                if i in checkpoints_i:
+                    accuracy_evolution.append(_checkpoint(network, epoch * nb_batch + i, train_dataset, test_dataset))
+
                 # Run a training set for these data
                 loss = network.training_step(inputs, labels)
                 loss_evolution.append(float(loss))
                 # TODO Log progress and loss based on time interval in debug
                 # TODO Print a visual loading bar, disable with settings
 
-            # TODO Test between each epoch, disable with a setting
             # Epoch statistics
             _record_epoch_stats(epochs_stats, loss_evolution[-len(train_loader):])
 
-    save_results(epochs_stats=epochs_stats)
+    if len(accuracy_evolution) == 0:
+        save_results(epochs_stats=epochs_stats)
+    else:
+        save_results(epochs_stats=epochs_stats, accuracy_evolution=accuracy_evolution)
 
     if settings.save_network:
         save_network(network, 'trained_network')
 
     # Post train plots
     plot_losses(loss_evolution)
+
+
+def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_dataset: Dataset) -> dict:
+    """
+    Pause the training to do some jobs, like intermediate testing and network backup.
+
+    :param network: The current neural network
+    :param batch_num: The batch number since the beginning of the training (used as checkpoint id)
+    :param train_dataset: The training dataset
+    :param test_dataset: The testing dataset
+    :return: A dictionary with the tests results
+    """
+
+    # Save the current network
+    if settings.checkpoint_save_network:
+        save_network(network, f'{batch_num:n}_checkpoint_network')
+
+    # Start tests
+    test_accuracy = test(test_dataset, network, test_name='checkpoint test', limit=settings.checkpoint_test_size)
+    train_accuracy = test(train_dataset, network, test_name='checkpoint train', limit=settings.checkpoint_train_size)
+    # Set it back to train because it was switched during tests
+    network.train()
+
+    logger.info(f'Checkpoint {batch_num:<6n} '
+                f'| test accuracy: {test_accuracy:5.2%} '
+                f'| train accuracy: {train_accuracy:5.2%}')
+
+    return {
+        'batch_num': batch_num,
+        'test_accuracy': test_accuracy,
+        'train_accuracy': train_accuracy
+    }
 
 
 def _record_epoch_stats(epochs_stats: List[dict], epoch_losses: List[float]) -> None:
