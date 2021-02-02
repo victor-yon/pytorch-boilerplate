@@ -10,16 +10,16 @@ from utils.settings import settings
 from utils.timer import SectionTimer
 
 
-def test(test_dataset: Dataset, network: Module, test_name: str = '', final: bool = False, limit: int = 0) -> float:
+def test(network: Module, test_dataset: Dataset, test_name: str = '', final: bool = False, limit: int = 0) -> float:
     """
-    Start testing inference on a dataset.
+    Start testing the network on a dataset.
 
-    :param test_dataset: The testing dataset
-    :param network: The network to use
-    :param test_name: Name of this test for logging and timers
+    :param network: The network to use.
+    :param test_dataset: The testing dataset.
+    :param test_name: Name of this test for logging and timers.
     :param final: If true this is the final test, will show in log info and save results in file.
-    :param limit: Limit of item from the dataset to evaluate during this testing
-    :return: The overall accuracy
+    :param limit: Limit of item from the dataset to evaluate during this testing (0 to run process the whole dataset).
+    :return: The overall accuracy.
     """
 
     if test_name:

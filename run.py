@@ -80,10 +80,10 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=N
     network_metrics(network, test_dataset[0][0].shape, device)
 
     # Start the training
-    train(train_dataset, test_dataset, network)
+    train(network, train_dataset, test_dataset)
 
     # Start normal test
-    test(test_dataset, network, final=True)
+    test(network, test_dataset, final=True)
 
     # Arrived to the end successfully (no error)
     save_results(success_run=True)

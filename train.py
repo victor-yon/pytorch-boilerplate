@@ -12,7 +12,14 @@ from utils.settings import settings
 from utils.timer import SectionTimer
 
 
-def train(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> None:
+def train(network: Module, train_dataset: Dataset, test_dataset: Dataset) -> None:
+    """
+    Train the network using the dataset.
+
+    :param network: The network to train in place.
+    :param train_dataset: The dataset used to train the network.
+    :param test_dataset: The dataset used to run intermediate test on the network during the training.
+    """
     # If path set, try to load a pre trained network from cache
     if settings.trained_network_cache_path and load_network(network, settings.trained_network_cache_path):
         return  # Stop here if the network parameters are successfully loaded from cache file
@@ -81,8 +88,8 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
         save_network(network, f'{batch_num:n}_checkpoint_network')
 
     # Start tests
-    test_accuracy = test(test_dataset, network, test_name='checkpoint test', limit=settings.checkpoint_test_size)
-    train_accuracy = test(train_dataset, network, test_name='checkpoint train', limit=settings.checkpoint_train_size)
+    test_accuracy = test(network, test_dataset, test_name='checkpoint test', limit=settings.checkpoint_test_size)
+    train_accuracy = test(network, train_dataset, test_name='checkpoint train', limit=settings.checkpoint_train_size)
     # Set it back to train because it was switched during tests
     network.train()
 

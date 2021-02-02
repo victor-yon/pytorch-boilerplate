@@ -59,10 +59,16 @@ class SectionTimer(Timer):
 
         return self.last
 
-    def pause(self):
+    def pause(self) -> None:
+        """
+        Stop the timer with no end log message.
+        """
         super().stop()
 
-    def resume(self):
+    def resume(self) -> None:
+        """
+        Restart the timer with no start log message.
+        """
         if not self.started:
             TimerError("A timer should be started before to be resumed")
         super().start()
