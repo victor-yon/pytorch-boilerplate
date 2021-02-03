@@ -4,7 +4,7 @@ import numpy as np
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
-from plots.misc import plot_losses
+from plots.misc import plot_train_progress
 from test import test
 from utils.logger import logger
 from utils.output import load_network, save_network, save_results
@@ -63,13 +63,15 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset) -> Non
     if len(accuracy_evolution) == 0:
         save_results(epochs_stats=epochs_stats)
     else:
+        # Do one last checkpoint to complet the plot
+        accuracy_evolution.append(_checkpoint(network, settings.nb_epoch * (nb_batch + 1), train_dataset, test_dataset))
         save_results(epochs_stats=epochs_stats, accuracy_evolution=accuracy_evolution)
 
     if settings.save_network:
         save_network(network, 'trained_network')
 
     # Post train plots
-    plot_losses(loss_evolution)
+    plot_train_progress(loss_evolution, accuracy_evolution, nb_batch)
 
 
 def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_dataset: Dataset) -> dict:

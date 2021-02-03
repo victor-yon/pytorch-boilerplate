@@ -27,6 +27,8 @@ def network_metrics(network: Module, input_dim: List, device: Optional[torch.dev
 
     metrics = {
         'name': type(network).__name__,
+        'loss_function': network.get_loss_name(),
+        'optimizer_function': network.get_optimizer_name(),
         'device': str(device),
         'total_params': network_info.total_params,
         'trainable_params': network_info.trainable_params,
@@ -34,7 +36,6 @@ def network_metrics(network: Module, input_dim: List, device: Optional[torch.dev
         'MAC_operations': network_info.total_mult_adds,
         'input_dimension': input_dim
     }
-    # TODO add loss function and optimizer
     # TODO add layers info
     # TODO add number of bytes
 

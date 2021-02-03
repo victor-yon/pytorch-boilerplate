@@ -58,7 +58,7 @@ class Settings:
         assert self.logger_file_level in possible_log_levels or isinstance(self.logger_file_level, int), \
             f"Invalid file log level '{self.logger_file_level}'"
 
-        assert self.checkpoints_per_epoch >= 1, 'The minimum number of checkpoints per epoch is 1'
+        assert self.checkpoints_per_epoch >= 0, 'The number of checkpoints should be >= 0'
         assert self.nb_classes > 0, 'At least one class is required'
         assert self.train_point_per_class > 0, 'At least one training point is required'
         assert self.test_point_per_class > 0, 'At least one testing point is required'

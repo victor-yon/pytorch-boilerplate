@@ -57,3 +57,15 @@ class SimpleClassifier(nn.Module):
         self._optimizer.step()
 
         return loss
+
+    def get_loss_name(self) -> str:
+        """
+        :return: The name of the loss function (criterion).
+        """
+        return type(self._criterion).__name__
+
+    def get_optimizer_name(self) -> str:
+        """
+        :return: The name of the optimiser function.
+        """
+        return type(self._optimizer).__name__
