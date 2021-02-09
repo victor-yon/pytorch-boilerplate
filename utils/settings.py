@@ -39,12 +39,13 @@ class Settings:
 
     # ============================== Dataset ==============================
     nb_classes: int = 4
-    train_point_per_class: int = 200
-    test_point_per_class: int = 50
+    train_point_per_class: int = 500
+    test_point_per_class: int = 200
 
     # ========================= Training settings =========================
+    device: str = 'auto'
     batch_size: int = 16
-    nb_epoch: int = 4
+    nb_epoch: int = 8
 
     def validate(self):
         """
@@ -52,10 +53,10 @@ class Settings:
         """
         # TODO automatically check type based on type hint
         # TODO check if run_name have valid character for a file
-        possible_log_levels = ['CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET']
-        assert self.logger_console_level in possible_log_levels or isinstance(self.logger_console_level, int), \
+        possible_log_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
+        assert self.logger_console_level.upper() in possible_log_levels or isinstance(self.logger_console_level, int), \
             f"Invalid console log level '{self.logger_console_level}'"
-        assert self.logger_file_level in possible_log_levels or isinstance(self.logger_file_level, int), \
+        assert self.logger_file_level.upper() in possible_log_levels or isinstance(self.logger_file_level, int), \
             f"Invalid file log level '{self.logger_file_level}'"
 
         assert self.checkpoints_per_epoch >= 0, 'The number of checkpoints should be >= 0'
@@ -63,6 +64,7 @@ class Settings:
         assert self.train_point_per_class > 0, 'At least one training point is required'
         assert self.test_point_per_class > 0, 'At least one testing point is required'
 
+        assert self.device in ('auto', 'cpu', 'cuda'), f'Not valid torch device name: {self.device}'
         assert self.batch_size > 0, 'Batch size should be a positive integer'
         assert self.nb_epoch > 0, 'Number of epoch should be at least 1'
 

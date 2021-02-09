@@ -149,6 +149,10 @@ class SexyLogger(logging.Logger):
         :param level: The log level
         """
 
+        # Allow lower class level name
+        if isinstance(level, str):
+            level = level.upper().strip()
+
         # Set the handler level
         self.console_handler.setLevel(level)
 
@@ -166,6 +170,10 @@ class SexyLogger(logging.Logger):
 
         :param level: The log level
         """
+
+        # Allow lower class level name
+        if isinstance(level, str):
+            level = level.upper().strip()
 
         # Set the handler level
         self.file_handler.setLevel(level)

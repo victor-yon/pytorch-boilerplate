@@ -57,18 +57,19 @@ def clean_up() -> None:
 
 
 @SectionTimer('run')
-def run(train_dataset: Dataset, test_dataset: Dataset, network: Module, device=None) -> None:
+def run(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> None:
     """
     Run the training and the testing of the network.
 
     :param train_dataset: The training dataset
     :param test_dataset: The testing dataset
     :param network: The neural network to train
-    :param device: The device to use for pytorch (None = auto)
     """
     # Automatically chooses between CPU and GPU if not specified
-    if device is None:
+    if settings.device is None or settings.device == 'auto':
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    else:
+        device = torch.device(settings.device)
 
     logger.debug(f'pyTorch device selected: {device}')
 
