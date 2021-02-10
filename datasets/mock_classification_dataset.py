@@ -40,6 +40,17 @@ class MockClassificationDataset(Dataset):
     def __getitem__(self, index):
         return self._features[index], self._labels[index]
 
+    def to(self, device: torch.device = None, dtype: torch.dtype = None, non_blocking: bool = False,
+           copy: bool = False):
+        """
+        Send the dataset to a specific device (cpu or cuda) and/or a convert it to a different type.
+        Modification in place.
+        The arguments correspond to the torch tensor "to" signature.
+        See https://pytorch.org/docs/stable/tensors.html#torch.Tensor.to.
+        """
+        self._features = self._features.to(device=device, dtype=dtype, non_blocking=non_blocking, copy=copy)
+        self._labels = self._labels.to(device=device, dtype=dtype, non_blocking=non_blocking, copy=copy)
+
     def show_plot(self) -> None:
         """
         Create a plot that represent the dataset and show it.

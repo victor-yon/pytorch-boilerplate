@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch
 from torch.nn import Module
@@ -10,12 +12,14 @@ from utils.settings import settings
 from utils.timer import SectionTimer
 
 
-def test(network: Module, test_dataset: Dataset, test_name: str = '', final: bool = False, limit: int = 0) -> float:
+def test(network: Module, test_dataset: Dataset, device: torch.device, test_name: str = '', final: bool = False,
+         limit: int = 0) -> float:
     """
     Start testing the network on a dataset.
 
     :param network: The network to use.
     :param test_dataset: The testing dataset.
+    :param device: The device used to store the network and datasets (it can influence the behaviour of the testing)
     :param test_name: Name of this test for logging and timers.
     :param final: If true this is the final test, will show in log info and save results in file.
     :param limit: Limit of item from the dataset to evaluate during this testing (0 to run process the whole dataset).
@@ -32,14 +36,15 @@ def test(network: Module, test_dataset: Dataset, test_name: str = '', final: boo
     network.eval()
 
     # Use the pyTorch data loader
-    test_loader = DataLoader(test_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=4)
+    num_workers = 0 if device.type == 'cuda' else os.cpu_count()  # cuda doesn't support multithreading for data loading
+    test_loader = DataLoader(test_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=num_workers)
     nb_classes = len(test_dataset.classes)
 
     nb_correct = 0
     nb_total = 0
     nb_labels_predictions = np.zeros((nb_classes, nb_classes))
 
-    # Diable gradient for performances
+    # Disable gradient for performances
     with torch.no_grad(), SectionTimer(f'network testing{test_name}', 'info' if final else 'debug'):
         # Iterate batches
         for i, (inputs, labels) in enumerate(test_loader):

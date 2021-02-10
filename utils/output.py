@@ -63,8 +63,15 @@ def init_out_directory() -> None:
             # Remove tmp directory
             run_dir.rmdir()
 
-    # Create the directories
-    img_dir.mkdir(parents=True)
+    try:
+        # Create the directories
+        img_dir.mkdir(parents=True)
+    except FileExistsError as err:
+        # Clear error message about file exist
+        raise RuntimeError(f'The run name "{settings.run_name}" is already used '
+                           f'in the out directory "{run_dir}". '
+                           f'Change the name in the run settings to a new one or "tmp" or empty.') from err
+
     logger.debug(f'Output directory created: {run_dir}')
 
     # Init the logger file

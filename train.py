@@ -1,6 +1,8 @@
+import os
 from typing import List
 
 import numpy as np
+import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
@@ -12,13 +14,14 @@ from utils.settings import settings
 from utils.timer import SectionTimer
 
 
-def train(network: Module, train_dataset: Dataset, test_dataset: Dataset) -> None:
+def train(network: Module, train_dataset: Dataset, test_dataset: Dataset, device: torch.device) -> None:
     """
     Train the network using the dataset.
 
     :param network: The network to train in place.
     :param train_dataset: The dataset used to train the network.
     :param test_dataset: The dataset used to run intermediate test on the network during the training.
+    :param device: The device used to store the network and datasets (it can influence the behaviour of the training)
     """
     # If path set, try to load a pre trained network from cache
     if settings.trained_network_cache_path and load_network(network, settings.trained_network_cache_path):
@@ -28,7 +31,8 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset) -> Non
     network.train()
 
     # Use the pyTorch data loader
-    train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=2)
+    num_workers = 0 if device.type == 'cuda' else os.cpu_count()  # cuda doesn't support multithreading for data loading
+    train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=num_workers)
     nb_batch = len(train_loader)
 
     # Define the indexes of checkpoints for each epoch

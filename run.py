@@ -73,18 +73,20 @@ def run(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> None:
 
     logger.debug(f'pyTorch device selected: {device}')
 
-    # Send the network to the selected device (CPU or CUDA)
+    # Send the network and the datasets to the selected device (CPU or CUDA)
+    # We assume the GPU have enough memory to store the whole network and datasets. If not it should be split.
     network.to(device)
-    # TODO send the dataset to device too
+    train_dataset.to(device)
+    test_dataset.to(device)
 
     # Save network stats and show if debug enable
     network_metrics(network, test_dataset[0][0].shape, device)
 
     # Start the training
-    train(network, train_dataset, test_dataset)
+    train(network, train_dataset, test_dataset, device)
 
     # Start normal test
-    test(network, test_dataset, final=True)
+    test(network, test_dataset, device, final=True)
 
     # Arrived to the end successfully (no error)
     save_results(success_run=True)
