@@ -44,6 +44,8 @@ class Settings:
 
     # ========================= Training settings =========================
     device: str = 'auto'
+    learning_rate: float = 0.001
+    momentum: float = 0.9
     batch_size: int = 16
     nb_epoch: int = 8
 
@@ -64,6 +66,7 @@ class Settings:
         assert self.train_point_per_class > 0, 'At least one training point is required'
         assert self.test_point_per_class > 0, 'At least one testing point is required'
 
+        # TODO should also accept "cuda:1" format
         assert self.device in ('auto', 'cpu', 'cuda'), f'Not valid torch device name: {self.device}'
         assert self.batch_size > 0, 'Batch size should be a positive integer'
         assert self.nb_epoch > 0, 'Number of epoch should be at least 1'

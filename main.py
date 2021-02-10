@@ -6,6 +6,7 @@ from utils.settings import settings
 from utils.timer import SectionTimer
 
 
+# TODO add a setup.py file
 def main():
     # TODO move all of this in run
     # Prepare the environment

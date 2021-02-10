@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as f
 from torch import optim
 
+from utils.settings import settings
+
 
 class SimpleClassifier(nn.Module):
     """
@@ -24,8 +26,9 @@ class SimpleClassifier(nn.Module):
         self.fc2 = nn.Linear(50, 50)  # Hidden 1 -> Hidden 2
         self.fc3 = nn.Linear(50, nb_classes)  # Hidden 2 -> Output
 
+        # Convert the tensor to long before to call the CrossEntropy to match with the expected data type.
         self._criterion = nn.CrossEntropyLoss()
-        self._optimizer = optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
+        self._optimizer = optim.SGD(self.parameters(), lr=settings.learning_rate, momentum=settings.momentum)
 
     def forward(self, x: Any) -> Any:
         """
@@ -52,7 +55,7 @@ class SimpleClassifier(nn.Module):
 
         # Forward + Backward + Optimize
         outputs = self(inputs)
-        loss = self._criterion(outputs, labels)
+        loss = self._criterion(outputs, labels.long())
         loss.backward()
         self._optimizer.step()
 

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
+import torch
 from torch.utils.data import Dataset
 
 from utils.output import save_plot
@@ -22,8 +22,8 @@ class MockClassificationDataset(Dataset):
         self.classes = ['class ' + str(i) for i in range(self._nb_classes)]
         self._data_point_per_class = data_point_per_class
 
-        self._features = np.zeros((nb_classes * data_point_per_class, 2), dtype=np.single)
-        self._labels = np.zeros(nb_classes * data_point_per_class, dtype=np.int_)
+        self._features = torch.zeros((nb_classes * data_point_per_class, 2), dtype=torch.float)
+        self._labels = torch.zeros(nb_classes * data_point_per_class, dtype=torch.uint8)
 
         # Generate points for each classes with normal distribution.
         # Every class have a different center.
@@ -31,8 +31,7 @@ class MockClassificationDataset(Dataset):
             index_start = cl * data_point_per_class
             index_end = cl * data_point_per_class + data_point_per_class
 
-            self._features[index_start:index_end] = np.random.normal(loc=cl * 2, scale=1,
-                                                                     size=(data_point_per_class, 2))
+            self._features[index_start:index_end] = torch.normal(mean=cl * 2, std=1, size=(data_point_per_class, 2))
             self._labels[index_start:index_end] = cl
 
     def __len__(self):
