@@ -1,13 +1,72 @@
-# Print iterations progress
 import time
-from typing import Any
+from dataclasses import dataclass
+from random import random
+from typing import Any, Optional
 
 from utils.timer import duration_to_str
 
 
+@dataclass
+class ProgressBarMetrics:
+    name: str
+    last_value: Optional[float] = None
+    last_printed_value: Optional[float] = None
+    print_type: str = 'f'  # Accept f (float) or %
+    more_is_good: bool = True
+    _printed: bool = False
+
+    def update(self, value: float) -> None:
+        """
+        Update the value and keep track of the previous one if it was already printed.
+        :param value: The new value for this metric.
+        """
+        if value is not None:
+            # Keep the last value until then so we can always show the good indicator
+            if self._printed:
+                self.last_printed_value = self.last_value
+            self._printed = False
+            self.last_value = value
+
+    def printed(self) -> None:
+        """ Register than the current value was printed (useful for indicators) """
+        self._printed = True
+
+    def evolution_indicator_str(self) -> str:
+        """
+        Return a colored character depending of the direction of the value.
+        """
+        # TODO global variable for colors
+        good_color = '\033[0;92m'  # Green text
+        bad_color = '\033[0;91m'  # Red text
+        no_evolution_color = '\033[0;33m'  # Orange text
+        reset_color = '\033[0m'
+
+        # Case with None previous value
+        if self.last_printed_value is None:
+            return ' '
+
+        loss_diff = self.last_value - self.last_printed_value
+
+        if loss_diff > 0:
+            return f'{good_color if self.more_is_good else bad_color}▲{reset_color}'
+        elif loss_diff < 0:
+            return f'{bad_color if self.more_is_good else good_color}▼{reset_color}'
+        else:
+            return f'{no_evolution_color}={reset_color}'
+
+    def __str__(self) -> str:
+        # Case with None value
+        if self.last_value is None:
+            return f'{self.name}: None   '
+
+        return f'{self.name}:{self.evolution_indicator_str()}' + (
+            f'{self.last_value or 0:<7.2%}' if self.print_type == '%' else f'{self.last_value or 0:7.5f}')
+
+
 class ProgressBar:
     def __init__(self, nb_epoch_batch: int, nb_epoch: int, task_name: str = 'progress', length: int = 50,
-                 epoch_char: str = '-', fill_char: str = ' ', refresh_time: int = 500, auto_display: bool = True):
+                 epoch_char: str = '-', fill_char: str = ' ', refresh_time: int = 500, auto_display: bool = True,
+                 with_accuracy: bool = False):
         """
         Create a machine learning progress bar to visual print and tracking progress.
 
@@ -17,7 +76,7 @@ class ProgressBar:
         :param length: The size of the visual progress bar (number of characters)
         :param epoch_char: The character used for epoch progress done.
         :param fill_char: The character used for epoch progress pending.
-        :param refresh_time: The minimal time distance between two auto print (in milliseconds).
+        :param refresh_time: The minimal time delta between two auto print, 0 for all auto print (in milliseconds).
         :param auto_display: If true the bar will be automatically printed at the start, the end and after every value
         update if the minimal refresh time allow it.
         """
@@ -37,11 +96,19 @@ class ProgressBar:
         self._refresh_time = refresh_time
         self._auto_display = auto_display
 
-    def incr_batch(self) -> None:
+        self.loss = ProgressBarMetrics('loss', more_is_good=False)
+        self.with_accuracy = with_accuracy
+        self.accuracy = ProgressBarMetrics('accuracy', print_type='%')
+
+    def incr_batch(self, loss: Optional[float] = None, accuracy: Optional[float] = None) -> None:
         """
         Increase by one the number of batch.
         Print the bar if auto display is enable and the minimal refresh time allow it.
+        :param loss: The loss for this batch
+        :param accuracy: The accuracy for this loss
         """
+        self.loss.update(loss)
+        self.accuracy.update(accuracy)
         self.current_batch += 1
         if self._auto_display:
             self.lazy_print()
@@ -80,21 +147,19 @@ class ProgressBar:
         """
         progress = (self.current_batch % self.nb_epoch_batch) / self.nb_epoch_batch
         # Keep 0% for the start but change to 100% for the end of each sub tasks
-        print('current_epoch:', self.current_epoch)
-        print(
-            f'current_batch: {self.current_batch} % nb_epoch_batch: {self.nb_epoch_batch} / nb_epoch_batch: {self.nb_epoch_batch}')
-        print('progress:', progress)
         if progress == 0 and self.current_epoch != 0:
             return 1.0
         return progress
 
     def print(self) -> None:
         """ Force print the progression. """
-        print(f'\r{self}', end='\r', flush=True)
+        print(f'\r{self}', end='', flush=True)
         self._last_print = time.perf_counter()
+        self.loss.printed()
+        self.accuracy.printed()
 
     def lazy_print(self) -> None:
-        """ Print the bar the minimal refresh time allow it. """
+        """ Print the bar if the minimal refresh time allow it. """
         if (time.perf_counter() - self._last_print) * 1_000 >= self._refresh_time:
             self.print()
 
@@ -115,8 +180,16 @@ class ProgressBar:
 
         eta = duration_to_str(self.get_eta(), precision='s')
 
-        return f'{self.task_name} | {task_progress:7.2%} |{bar}| ' \
-               f'epoch {self.current_epoch}/{self.nb_epoch} - {epoch_progress:<6.1%}| ETA: {eta}'
+        string = f'{self.task_name} | {task_progress:7.2%} |{bar}| ' \
+                 f'ep. {self.current_epoch}/{self.nb_epoch} {epoch_progress:<4.0%}' \
+                 f'| {self.loss} '
+
+        if self.with_accuracy:
+            string += f'| {self.accuracy}'
+
+        string += f'| ETA: {eta}'
+
+        return string
 
     def __enter__(self) -> "ProgressBar":
         """
@@ -133,38 +206,20 @@ class ProgressBar:
         """
         if self._auto_display:
             self.print()
-
-
-def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
+            # TODO print a summary for the last one
+            print()  # New line at the end
 
 
 if __name__ == '__main__':
     nb_batch = 10
     nb_epoch = 2
 
-    with ProgressBar(nb_batch, nb_epoch, refresh_time=1) as p:
+    with ProgressBar(nb_batch, nb_epoch, refresh_time=200, with_accuracy=True) as p:
         for epoch_i in range(nb_epoch):
             p.incr_epoch()
             for batch in range(nb_batch):
-                p.incr_batch()
                 # Do stuff...
                 time.sleep(1)
+                p.incr_batch(loss=batch, accuracy=random())
+
+    print('end')
