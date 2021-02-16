@@ -1,7 +1,7 @@
 import time
 from dataclasses import dataclass
 from random import random
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 from utils.timer import duration_to_str
 
@@ -11,7 +11,8 @@ class ProgressBarMetrics:
     name: str
     last_value: Optional[float] = None
     last_printed_value: Optional[float] = None
-    print_type: str = 'f'  # Accept f (float) or %
+    print_value: Callable[[Optional[float]], str] = lambda x: f'{x:7.5f}'
+    evolution_indicator: bool = True
     more_is_good: bool = True
     _is_printed: bool = False
 
@@ -58,14 +59,15 @@ class ProgressBarMetrics:
         if self.last_value is None:
             return f'{self.name}: None   '
 
-        return f'{self.name}:{self.evolution_indicator_str()}' + (
-            f'{self.last_value or 0:<7.2%}' if self.print_type == '%' else f'{self.last_value or 0:7.5f}')
+        indicator = self.evolution_indicator_str() if self.evolution_indicator else ' '
+
+        return f'{self.name}:{indicator}' + self.print_value(self.last_value)
 
 
 class ProgressBar:
     def __init__(self, tasks_size: int, nb_subtasks: int = 1, task_name: str = 'progress', subtask_name: str = '',
-                 metrics: Iterable[ProgressBarMetrics] = tuple(), bar_length: int = 50, subtask_char: str = '⎼',
-                 fill_char: str = ' ', refresh_time: int = 500, auto_display: bool = True):
+                 metrics: Iterable[ProgressBarMetrics] = tuple(), bar_length: int = 60, subtask_char: str = '⎼',
+                 fill_char: str = ' ', refresh_time: float = 0.5, auto_display: bool = True):
         """
         Create a machine learning progress bar to visual print and tracking progress.
 
@@ -76,7 +78,7 @@ class ProgressBar:
         :param bar_length: The size of the visual progress bar (number of characters)
         :param subtask_char: The character used for epoch progress done.
         :param fill_char: The character used for epoch progress pending.
-        :param refresh_time: The minimal time delta between two auto print, 0 for all auto print (in milliseconds).
+        :param refresh_time: The minimal time delta between two auto print, 0 for all auto print (in seconds).
         :param auto_display: If true the bar will be automatically printed at the start, the end and after every value
         update if the minimal refresh time allow it.
         """
@@ -95,7 +97,7 @@ class ProgressBar:
         self._start_time = None
         self._end_time = None
         self._last_print = None
-        self._refresh_time = refresh_time / 1_000  # Convert as second
+        self._refresh_time = refresh_time
         self._auto_display = auto_display
 
         self.metrics = {metric.name: metric for metric in metrics}
@@ -250,17 +252,19 @@ class ProgressBar:
         return string
 
 
-class ProgressBarTraining(ProgressBar):
+class ProgressBarNetworkTraining(ProgressBar):
     def __init__(self, nb_batch: int, nb_epoch: int):
         super().__init__(nb_batch, nb_epoch, 'Training', 'ep.', metrics=(
             ProgressBarMetrics('loss', more_is_good=False),
-            ProgressBarMetrics('accuracy', print_type='%')
+            ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}')
         ))
 
 
-class ProgressBarTesting(ProgressBar):
+class ProgressBarNetworkTesting(ProgressBar):
     def __init__(self, nb_batch: int):
-        super().__init__(nb_batch, 1, 'Testing ')
+        super().__init__(nb_batch, 1, 'Testing ', metrics=(
+            ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}', evolution_indicator=False),
+        ))
 
 
 if __name__ == '__main__':
@@ -269,7 +273,7 @@ if __name__ == '__main__':
 
     print('start')
 
-    with ProgressBarTraining(nb_batch, nb_epoch) as p:
+    with ProgressBarNetworkTraining(nb_batch, nb_epoch) as p:
         for epoch_i in range(nb_epoch):
             p.incr_subtask()
             for batch in range(nb_batch):
@@ -282,10 +286,10 @@ if __name__ == '__main__':
     print('end')
 
     print('start')
-    with ProgressBarTesting(nb_batch) as p:
+    with ProgressBarNetworkTesting(nb_batch) as p:
         for batch in range(nb_batch):
             # Do stuff...
             time.sleep(1)
-            p.incr()
+            p.incr(accuracy=random())
 
     print('end')
