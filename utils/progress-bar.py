@@ -65,7 +65,7 @@ class ProgressBarMetrics:
 
 class ProgressBar:
     def __init__(self, nb_epoch_batch: int, nb_epoch: int, task_name: str = 'progress', length: int = 50,
-                 epoch_char: str = '-', fill_char: str = ' ', refresh_time: int = 500, auto_display: bool = True,
+                 epoch_char: str = '⎼', fill_char: str = ' ', refresh_time: int = 500, auto_display: bool = True,
                  with_accuracy: bool = False):
         """
         Create a machine learning progress bar to visual print and tracking progress.
@@ -91,8 +91,9 @@ class ProgressBar:
         self.epoch_char = epoch_char
         self.fill_char = fill_char
 
-        self._start_time = time.perf_counter()
-        self._last_print = time.perf_counter()
+        self._start_time = None
+        self._end_time = None
+        self._last_print = None
         self._refresh_time = refresh_time
         self._auto_display = auto_display
 
@@ -153,14 +154,15 @@ class ProgressBar:
 
     def print(self) -> None:
         """ Force print the progression. """
-        print(f'\r{self}', end='', flush=True)
+        print(f'{self}', end='\r', flush=True)
         self._last_print = time.perf_counter()
         self.loss.printed()
         self.accuracy.printed()
 
     def lazy_print(self) -> None:
         """ Print the bar if the minimal refresh time allow it. """
-        if (time.perf_counter() - self._last_print) * 1_000 >= self._refresh_time:
+        if self._last_print is None or self._refresh_time == 0 or \
+                (time.perf_counter() - self._last_print) * 1_000 >= self._refresh_time:
             self.print()
 
     def __str__(self) -> str:
@@ -178,36 +180,57 @@ class ProgressBar:
         # Gray background for task loading
         bar = '\033[0;100m' + bar[:nb_task_char] + '\033[0m' + bar[nb_task_char:]
 
-        eta = duration_to_str(self.get_eta(), precision='s')
-
-        string = f'{self.task_name} | {task_progress:7.2%} |{bar}| ' \
+        string = f'{self.task_name}⎹ {task_progress:7.2%}⎹{bar}⎸' \
                  f'ep. {self.current_epoch}/{self.nb_epoch} {epoch_progress:<4.0%}' \
-                 f'| {self.loss} '
+                 f'⎹ {self.loss}'
 
         if self.with_accuracy:
-            string += f'| {self.accuracy}'
+            string += f'⎹ {self.accuracy}'
 
-        string += f'| ETA: {eta}'
+        if self._end_time is None:
+            # Still in progress
+            eta = duration_to_str(self.get_eta(), precision='s')
+            string += f'⎹ ETA: {eta}'
+        else:
+            # Task ended or interrupted
+            duration = duration_to_str(self._end_time - self._start_time, precision='s')
+            string += f'⎹ {duration}'
 
         return string
 
-    def __enter__(self) -> "ProgressBar":
+    def start(self):
         """
-        Initial display of the bar if auto display enable.
-        :return: The current progress bar object.
+        Start timer and display the bar if auto display enable.
         """
+        assert self._start_time is None, 'The progress bar can\'t be started twice.'
+        self._start_time = time.perf_counter()
         if self._auto_display:
             self.print()
+
+    def __enter__(self) -> "ProgressBar":
+        """
+        Start timer and display the bar if auto display enable.
+        :return: The current progress bar object.
+        """
+        self.start()
         return self
+
+    def stop(self):
+        """
+        Save end time and display the bar if auto display enable.
+        """
+        assert self._end_time is None, 'The progress bar can\'t be stopped twice.'
+        self._end_time = time.perf_counter()
+        if self._auto_display:
+            self.print()
+            # TODO print a summary for the last one
+            print()  # New line at the end
 
     def __exit__(self, *exc_info: Any) -> None:
         """
         Final display of the bar if auto display enable.
         """
-        if self._auto_display:
-            self.print()
-            # TODO print a summary for the last one
-            print()  # New line at the end
+        self.stop()
 
 
 if __name__ == '__main__':
