@@ -1,6 +1,5 @@
 import time
 from dataclasses import dataclass
-from random import random
 from typing import Any, Callable, Iterable, Optional
 
 from utils.timer import duration_to_str
@@ -69,16 +68,19 @@ class ProgressBar:
                  metrics: Iterable[ProgressBarMetrics] = tuple(), bar_length: int = 60, subtask_char: str = '⎼',
                  fill_char: str = ' ', refresh_time: float = 0.5, auto_display: bool = True):
         """
-        Create a machine learning progress bar to visual print and tracking progress.
+        Create a progress bar to visually tracking progress from task, subtasks and metrics.
 
         :param tasks_size: The number of iterations before to reach the end of the task, or the end of a subtask if
         there is several of them.
-        :param nb_subtasks: The the number of subtasks, each subtask will have the same size (tasks_size).
-        :param task_name: The name of the task.
-        :param bar_length: The size of the visual progress bar (number of characters)
-        :param subtask_char: The character used for epoch progress done.
-        :param fill_char: The character used for epoch progress pending.
-        :param refresh_time: The minimal time delta between two auto print, 0 for all auto print (in seconds).
+        :param nb_subtasks: The number of subtasks, each subtask will have the same size (tasks_size). If 1 there is no
+        subtasks.
+        :param task_name: The name of the global task.
+        :param subtask_name: The name of the subtasks.
+        :param metrics: A list of metrics to track (they can be updated during the task).
+        :param bar_length: The size of the visual progress bar (number of characters).
+        :param subtask_char: The character used for subtask progress done.
+        :param fill_char: The character used for subtask progress pending.
+        :param refresh_time: The minimal time delta (in seconds) between two auto print, 0 to see all auto print.
         :param auto_display: If true the bar will be automatically printed at the start, the end and after every value
         update if the minimal refresh time allow it.
         """
@@ -117,7 +119,7 @@ class ProgressBar:
 
     def incr(self, **metrics: Any) -> None:
         """
-        Increase the progression of the current subtask.
+        Increase the progression of the current subtask and update one or several metric values.
         Print the bar if auto display is enable and the minimal refresh time allow it.
         """
         self.current_task_progress += 1
@@ -136,7 +138,7 @@ class ProgressBar:
 
     def get_eta(self) -> float:
         """
-        Get the "estimated time of arrival" to reach 100% of this task.
+        Get the "estimated time of arrival" to reach 100% of the global task.
         :return: The estimated value in second.
         """
         delta_t = time.perf_counter() - self._start_time
@@ -155,7 +157,7 @@ class ProgressBar:
 
     def get_subtask_progress(self) -> float:
         """
-        :return: The completed percentage of the current epoch.
+        :return: The completed percentage of the current subtask.
         """
         progress = (self.current_task_progress % self.tasks_size) / self.tasks_size
         # Keep 0% for the start but change to 100% for the end of each sub tasks
@@ -253,43 +255,18 @@ class ProgressBar:
 
 
 class ProgressBarNetworkTraining(ProgressBar):
-    def __init__(self, nb_batch: int, nb_epoch: int):
-        super().__init__(nb_batch, nb_epoch, 'Training', 'ep.', metrics=(
-            ProgressBarMetrics('loss', more_is_good=False),
-            ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}')
-        ))
+    def __init__(self, nb_batch: int, nb_epoch: int, auto_display: bool = True):
+        super().__init__(nb_batch, nb_epoch, 'Training', 'ep.', auto_display=auto_display,
+                         metrics=(
+                             ProgressBarMetrics('loss', more_is_good=False),
+                             ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}')
+                         ))
 
 
 class ProgressBarNetworkTesting(ProgressBar):
-    def __init__(self, nb_batch: int):
-        super().__init__(nb_batch, 1, 'Testing ', metrics=(
-            ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}', evolution_indicator=False),
-        ))
-
-
-if __name__ == '__main__':
-    nb_batch = 10
-    nb_epoch = 2
-
-    print('start')
-
-    with ProgressBarNetworkTraining(nb_batch, nb_epoch) as p:
-        for epoch_i in range(nb_epoch):
-            p.incr_subtask()
-            for batch in range(nb_batch):
-                # Do stuff...
-                time.sleep(1)
-                # if batch < 5:
-                #     print(f'Batch {batch}')
-                p.incr(loss=batch, accuracy=random())
-
-    print('end')
-
-    print('start')
-    with ProgressBarNetworkTesting(nb_batch) as p:
-        for batch in range(nb_batch):
-            # Do stuff...
-            time.sleep(1)
-            p.incr(accuracy=random())
-
-    print('end')
+    def __init__(self, nb_batch: int, auto_display: bool = True):
+        super().__init__(nb_batch, 1, 'Testing ', auto_display=auto_display,
+                         metrics=(
+                             ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}',
+                                                evolution_indicator=False),
+                         ))
