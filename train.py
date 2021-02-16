@@ -92,6 +92,7 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
     # Save the current network
     if settings.checkpoint_save_network:
         save_network(network, f'{batch_num:n}_checkpoint_network')
+        # TODO add a setting to save the network only if the accuracy is improved
 
     # Start tests
     test_accuracy = test(network, test_dataset, test_name='checkpoint test', limit=settings.checkpoint_test_size)
