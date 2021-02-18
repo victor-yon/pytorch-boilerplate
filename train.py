@@ -57,7 +57,7 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset, device
                 # Checkpoint if enable for this batch
                 if i in checkpoints_i:
                     timer.pause()
-                    check_results = _checkpoint(network, epoch * nb_batch + i, train_dataset, test_dataset)
+                    check_results = _checkpoint(network, epoch * nb_batch + i, train_dataset, test_dataset, device)
                     progress.update(accuracy=check_results['test_accuracy'])
                     accuracy_evolution.append(check_results)
                     timer.resume()
@@ -75,7 +75,8 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset, device
         save_results(epochs_stats=epochs_stats)
     else:
         # Do one last checkpoint to complet the plot
-        accuracy_evolution.append(_checkpoint(network, settings.nb_epoch * (nb_batch + 1), train_dataset, test_dataset))
+        accuracy_evolution.append(
+            _checkpoint(network, settings.nb_epoch * (nb_batch + 1), train_dataset, test_dataset, device))
         save_results(epochs_stats=epochs_stats, accuracy_evolution=accuracy_evolution)
 
     if settings.save_network:
@@ -85,7 +86,8 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset, device
     plot_train_progress(loss_evolution, accuracy_evolution, nb_batch)
 
 
-def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_dataset: Dataset) -> dict:
+def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_dataset: Dataset,
+                device: torch.device) -> dict:
     """
     Pause the training to do some jobs, like intermediate testing and network backup.
 
@@ -102,8 +104,13 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
         # TODO add a setting to save the network only if the accuracy is improved
 
     # Start tests
-    test_accuracy = test(network, test_dataset, test_name='checkpoint test', limit=settings.checkpoint_test_size)
-    train_accuracy = test(network, train_dataset, test_name='checkpoint train', limit=settings.checkpoint_train_size)
+    if settings.checkpoint_test_size > 0:
+        test_accuracy = test(network, test_dataset, device, test_name='checkpoint test',
+                             limit=settings.checkpoint_test_size)
+    if settings.checkpoint_train_size > 0:
+        train_accuracy = test(network, train_dataset, device, test_name='checkpoint train',
+                              limit=settings.checkpoint_train_size)
+
     # Set it back to train because it was switched during tests
     network.train()
 
@@ -145,6 +152,7 @@ def _record_epoch_stats(epochs_stats: List[dict], epoch_losses: List[float]) -> 
 
 
 class ProgressBarTraining(ProgressBar):
+    """ Override the ProgressBar to define print configuration adapted to training. """
     def __init__(self, nb_batch: int):
         super().__init__(nb_batch, settings.nb_epoch, 'Training', 'ep.', auto_display=settings.visual_progress_bar,
                          metrics=(

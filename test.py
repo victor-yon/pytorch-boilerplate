@@ -47,8 +47,6 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
     nb_labels_predictions = np.zeros((nb_classes, nb_classes))
 
     # Disable gradient for performances
-    with torch.no_grad(), SectionTimer(f'network testing{test_name}', 'info' if final else 'debug'):
-    # Diable gradient for performances
     with torch.no_grad(), SectionTimer(f'network testing{test_name}', 'info' if final else 'debug'), \
             ProgressBarTesting(nb_batch, final and settings.visual_progress_bar) as progress:
         # Iterate batches
@@ -86,6 +84,7 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
 
 
 class ProgressBarTesting(ProgressBar):
+    """ Override the ProgressBar to define print configuration adapted to testing. """
     def __init__(self, nb_batch: int, auto_display: bool = True):
         super().__init__(nb_batch, 1, 'Testing ', auto_display=auto_display,
                          metrics=(
