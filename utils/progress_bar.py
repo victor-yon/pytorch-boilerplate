@@ -85,7 +85,7 @@ class ProgressBar:
         update if the minimal refresh time allow it.
         """
         self.tasks_size = tasks_size
-        self.current_task_progress = 0
+        self.task_progress = 0
 
         self.nb_subtasks = nb_subtasks
         self.current_subtask = 0
@@ -122,14 +122,14 @@ class ProgressBar:
         Increase the progression of the current subtask and update one or several metric values.
         Print the bar if auto display is enable and the minimal refresh time allow it.
         """
-        self.current_task_progress += 1
+        self.task_progress += 1
         self.update(**metrics)
         if self._auto_display:
             self.lazy_print()
 
-    def incr_subtask(self) -> None:
+    def next_subtask(self) -> None:
         """
-        Increase by one the number of the current subtask.
+        Increase by one the index of the current subtask.
         Print the bar if auto display is enable and the minimal refresh time allow it.
         """
         self.current_subtask += 1
@@ -153,17 +153,16 @@ class ProgressBar:
         """
         :return: The completed percentage of this task.
         """
-        return self.current_task_progress / (self.nb_subtasks * self.tasks_size)
+        return self.task_progress / (self.nb_subtasks * self.tasks_size)
 
     def get_subtask_progress(self) -> float:
         """
         :return: The completed percentage of the current subtask.
         """
-        progress = (self.current_task_progress % self.tasks_size) / self.tasks_size
-        # Keep 0% for the start but change to 100% for the end of each sub tasks
-        if progress == 0 and self.current_subtask != 0:
+        # Force 100% for the end of each sub tasks (if not, modulo will give 0)
+        if self.current_subtask != 0 and self.task_progress == self.tasks_size * self.current_subtask:
             return 1.0
-        return progress
+        return (self.task_progress % self.tasks_size) / self.tasks_size
 
     def start(self):
         """
@@ -254,7 +253,7 @@ class ProgressBar:
         return string
 
 
-class ProgressBarNetworkTraining(ProgressBar):
+class ProgressBarTraining(ProgressBar):
     def __init__(self, nb_batch: int, nb_epoch: int, auto_display: bool = True):
         super().__init__(nb_batch, nb_epoch, 'Training', 'ep.', auto_display=auto_display,
                          metrics=(
@@ -263,7 +262,7 @@ class ProgressBarNetworkTraining(ProgressBar):
                          ))
 
 
-class ProgressBarNetworkTesting(ProgressBar):
+class ProgressBarTesting(ProgressBar):
     def __init__(self, nb_batch: int, auto_display: bool = True):
         super().__init__(nb_batch, 1, 'Testing ', auto_display=auto_display,
                          metrics=(
