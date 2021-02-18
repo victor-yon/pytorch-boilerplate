@@ -8,6 +8,7 @@ from plots.misc import plot_train_progress
 from test import test
 from utils.logger import logger
 from utils.output import load_network, save_network, save_results
+from utils.progress_bar import ProgressBar, ProgressBarMetrics
 from utils.settings import settings
 from utils.timer import SectionTimer
 
@@ -40,22 +41,28 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset) -> Non
     accuracy_evolution: List[dict] = []
     epochs_stats: List[dict] = []
 
-    with SectionTimer('network training') as timer:
+    # Use timer and progress bar
+    with SectionTimer('network training') as timer, ProgressBarTraining(nb_batch) as progress:
         # Iterate epoch
         for epoch in range(settings.nb_epoch):
+            progress.next_subtask()
             # Iterate batches
             for i, (inputs, labels) in enumerate(train_loader):
+                progress.incr()
 
+                # Checkpoint if enable for this batch
                 if i in checkpoints_i:
                     timer.pause()
-                    accuracy_evolution.append(_checkpoint(network, epoch * nb_batch + i, train_dataset, test_dataset))
+                    check_results = _checkpoint(network, epoch * nb_batch + i, train_dataset, test_dataset)
+                    progress.update(accuracy=check_results['test_accuracy'])
+                    accuracy_evolution.append(check_results)
                     timer.resume()
 
-                # Run a training set for these data
+                # Run one training step for these data
                 loss = network.training_step(inputs, labels)
+                progress.update(loss=loss)
                 loss_evolution.append(float(loss))
                 # TODO Log progress and loss based on time interval in debug
-                # TODO Print a visual loading bar, disable with settings
 
             # Epoch statistics
             _record_epoch_stats(epochs_stats, loss_evolution[-len(train_loader):])
@@ -95,9 +102,9 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
     # Set it back to train because it was switched during tests
     network.train()
 
-    logger.info(f'Checkpoint {batch_num:<6n} '
-                f'| test accuracy: {test_accuracy:5.2%} '
-                f'| train accuracy: {train_accuracy:5.2%}')
+    logger.debug(f'Checkpoint {batch_num:<6n} '
+                 f'| test accuracy: {test_accuracy:5.2%} '
+                 f'| train accuracy: {train_accuracy:5.2%}')
 
     return {
         'batch_num': batch_num,
@@ -126,7 +133,16 @@ def _record_epoch_stats(epochs_stats: List[dict], epoch_losses: List[float]) -> 
 
     # Log stats
     epoch_num = len(epochs_stats)
-    logger.info(f"Epoch {epoch_num:3}/{settings.nb_epoch} ({epoch_num / settings.nb_epoch:7.2%}) "
-                f"| loss: {stats['losses_mean']:.5f} "
-                f"| diff: {stats['losses_mean_diff']:+.5f} "
-                f"| std: {stats['losses_std']:.5f}")
+    logger.debug(f"Epoch {epoch_num:3}/{settings.nb_epoch} ({epoch_num / settings.nb_epoch:7.2%}) "
+                 f"| loss: {stats['losses_mean']:.5f} "
+                 f"| diff: {stats['losses_mean_diff']:+.5f} "
+                 f"| std: {stats['losses_std']:.5f}")
+
+
+class ProgressBarTraining(ProgressBar):
+    def __init__(self, nb_batch: int):
+        super().__init__(nb_batch, settings.nb_epoch, 'Training', 'ep.', auto_display=settings.visual_progress_bar,
+                         metrics=(
+                             ProgressBarMetrics('loss', more_is_good=False),
+                             ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}')
+                         ))

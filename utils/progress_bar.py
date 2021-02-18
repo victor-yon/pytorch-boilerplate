@@ -63,6 +63,7 @@ class ProgressBarMetrics:
         return f'{self.name}:{indicator}' + self.print_value(self.last_value)
 
 
+# TODO option to disable color and background and unicode
 class ProgressBar:
     def __init__(self, tasks_size: int, nb_subtasks: int = 1, task_name: str = 'progress', subtask_name: str = '',
                  metrics: Iterable[ProgressBarMetrics] = tuple(), bar_length: int = 60, subtask_char: str = '⎼',
@@ -122,6 +123,7 @@ class ProgressBar:
         Increase the progression of the current subtask and update one or several metric values.
         Print the bar if auto display is enable and the minimal refresh time allow it.
         """
+        # TODO auto incr with range wrapping
         self.task_progress += 1
         self.update(**metrics)
         if self._auto_display:
@@ -234,7 +236,7 @@ class ProgressBar:
 
         # Multiple subtask information
         if self.nb_subtasks > 1:
-            string += f'{subtask_formatted_name}{self.current_subtask}/{self.nb_subtasks} {subtask_progress:<4.0%}⎹ '
+            string += f'{subtask_formatted_name}{self.current_subtask}/{self.nb_subtasks} {subtask_progress:4.0%}⎹ '
 
         # Metrics information
         if len(self.metrics) > 0:
@@ -251,21 +253,3 @@ class ProgressBar:
             string += f'{duration}'
 
         return string
-
-
-class ProgressBarTraining(ProgressBar):
-    def __init__(self, nb_batch: int, nb_epoch: int, auto_display: bool = True):
-        super().__init__(nb_batch, nb_epoch, 'Training', 'ep.', auto_display=auto_display,
-                         metrics=(
-                             ProgressBarMetrics('loss', more_is_good=False),
-                             ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}')
-                         ))
-
-
-class ProgressBarTesting(ProgressBar):
-    def __init__(self, nb_batch: int, auto_display: bool = True):
-        super().__init__(nb_batch, 1, 'Testing ', auto_display=auto_display,
-                         metrics=(
-                             ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}',
-                                                evolution_indicator=False),
-                         ))

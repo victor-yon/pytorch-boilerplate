@@ -27,6 +27,8 @@ class Settings:
     logger_console_level: Union[str, int] = 'INFO'
     logger_file_level: Union[str, int] = 'DEBUG'
     logger_file_enable: bool = True
+    logger_progress_frequency: int = 10  # sec
+    visual_progress_bar: bool = True
     show_images: bool = True
     save_network: bool = True
     trained_network_cache_path: str = ''
