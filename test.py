@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 from plots.misc import plot_confusion_matrix
 from utils.logger import logger
 from utils.output import save_results
+from utils.progress_bar import ProgressBar, ProgressBarMetrics
 from utils.settings import settings
 from utils.timer import SectionTimer
 
@@ -38,6 +39,7 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
     # Use the pyTorch data loader
     num_workers = 0 if device.type == 'cuda' else os.cpu_count()  # cuda doesn't support multithreading for data loading
     test_loader = DataLoader(test_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=num_workers)
+    nb_batch = min(len(test_loader), nb_test_items // settings.batch_size)
     nb_classes = len(test_dataset.classes)
 
     nb_correct = 0
@@ -46,8 +48,12 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
 
     # Disable gradient for performances
     with torch.no_grad(), SectionTimer(f'network testing{test_name}', 'info' if final else 'debug'):
+    # Diable gradient for performances
+    with torch.no_grad(), SectionTimer(f'network testing{test_name}', 'info' if final else 'debug'), \
+            ProgressBarTesting(nb_batch, final and settings.visual_progress_bar) as progress:
         # Iterate batches
         for i, (inputs, labels) in enumerate(test_loader):
+            progress.incr()
             # Stop testing after the limit
             if limit and i * settings.batch_size >= limit:
                 break
@@ -59,6 +65,7 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
             # Count the result
             nb_total += len(labels)
             nb_correct += torch.eq(predicted, labels).sum()
+            progress.update(accuracy=float(nb_correct / nb_total))
             for label, pred in zip(labels, predicted):
                 nb_labels_predictions[label][pred] += 1
 
@@ -76,3 +83,12 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
         plot_confusion_matrix(nb_labels_predictions, class_names=test_dataset.classes)
 
     return accuracy
+
+
+class ProgressBarTesting(ProgressBar):
+    def __init__(self, nb_batch: int, auto_display: bool = True):
+        super().__init__(nb_batch, 1, 'Testing ', auto_display=auto_display,
+                         metrics=(
+                             ProgressBarMetrics('accuracy', print_value=lambda x: f'{x:<6.2%}',
+                                                evolution_indicator=False),
+                         ))
