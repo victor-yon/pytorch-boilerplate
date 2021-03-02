@@ -56,6 +56,12 @@ class BasePlanner:
         """
         raise NotImplemented('Reset abstract method need to be override ')
 
+    def reset_counters(self) -> None:
+        """
+        Reset the counter used in basename to 0.
+        """
+        self.num_count = 0
+
 
 class Planner(BasePlanner):
     """
@@ -200,6 +206,11 @@ class SequencePlanner(BasePlanner):
         for p in self.planners:
             p.reset_original_values()
 
+    def reset_counters(self) -> None:
+        """ See :func:`~utils.planner.BasePlanner.reset_counters` """
+        for p in self.planners:
+            p.reset_counters()
+
 
 class ParallelPlanner(BasePlanner):
     """
@@ -266,6 +277,11 @@ class ParallelPlanner(BasePlanner):
         """ See :func:`~utils.planner.BasePlanner.reset_original_values` """
         for p in self.planners:
             p.reset_original_values()
+
+    def reset_counters(self) -> None:
+        """ See :func:`~utils.planner.BasePlanner.reset_counters` """
+        for p in self.planners:
+            p.reset_counters()
 
 
 class CombinatorPlanner(BasePlanner):
@@ -345,3 +361,8 @@ class CombinatorPlanner(BasePlanner):
         """ See :func:`~utils.planner.BasePlanner.reset_original_values` """
         for p in self.planners:
             p.reset_original_values()
+
+    def reset_counters(self) -> None:
+        """ See :func:`~utils.planner.BasePlanner.reset_counters` """
+        for p in self.planners:
+            p.reset_counters()
