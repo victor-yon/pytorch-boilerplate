@@ -81,7 +81,11 @@ class Planner(BasePlanner):
 
     def __iter__(self) -> Iterator:
         """ See :func:`~utils.planner.BasePlanner.__iter__` """
-        self._setting_original_value = getattr(settings, self.setting_name)
+        # Save the original value if it's the first iteration since the init or a reset
+        if self._setting_original_value is None:
+            self._setting_original_value = getattr(settings, self.setting_name)
+
+        # Start values iteration
         self._values_iterator = iter(self.setting_values)
         return self
 
@@ -114,8 +118,10 @@ class Planner(BasePlanner):
 
     def reset_original_values(self) -> None:
         """ See :func:`~utils.planner.BasePlanner.reset_original_values` """
-        if self._values_iterator is not None and getattr(settings, self.setting_name) != self._setting_original_value:
-            setattr(settings, self.setting_name, self._setting_original_value)
+        if self._values_iterator is not None:
+            if getattr(settings, self.setting_name) != self._setting_original_value:
+                setattr(settings, self.setting_name, self._setting_original_value)
+            self._setting_original_value = None
 
 
 class SequencePlanner(BasePlanner):
