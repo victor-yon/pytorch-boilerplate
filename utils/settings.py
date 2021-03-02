@@ -45,6 +45,7 @@ class Settings:
     test_point_per_class: int = 200
 
     # ========================= Training settings =========================
+    seed: int = 42  # FIXME allow to set is as None from args or settings file
     device: str = 'auto'
     learning_rate: float = 0.001
     momentum: float = 0.9
@@ -133,7 +134,7 @@ class Settings:
         :param name: The name of the attribut
         :param value: The value of the attribut
         """
-        logger.info(f'Setting "{name}" changed from "{getattr(self, name)}" to "{value}".')
+        logger.debug(f'Setting "{name}" changed from "{getattr(self, name)}" to "{value}".')
         self.__dict__[name] = value
         self.validate()
 

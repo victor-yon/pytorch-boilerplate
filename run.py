@@ -34,11 +34,11 @@ def preparation() -> None:
     # Set plot style
     set_plot_style()
 
-    # Set random seeds for reproducibility
-    # TODO add a setting for seed
-    random.seed(42)
-    torch.manual_seed(42)
-    np.random.seed(42)
+    if settings.seed is not None:
+        # Set random seeds for reproducibility
+        random.seed(settings.seed)
+        torch.manual_seed(settings.seed)
+        np.random.seed(settings.seed)
 
     # Print settings
     logger.debug(settings)
