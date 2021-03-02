@@ -1,19 +1,24 @@
 from main import main
 from utils.planner import CombinatorPlanner, Planner
+from utils.settings import settings
 
 if __name__ == '__main__':
     # TODO add train once option
     # TODO skip existing runs names
+    # TODO add a default settings file for run planner
 
-    # planner = Planner('train_point_per_class', range(50, 501, 50), 'train-size')
+    # planner = Planner('train_point_per_class', range(50, 501, 50))
     planner = CombinatorPlanner([
         Planner('train_point_per_class', range(250, 501, 50)),
-        Planner('nb_epoch', range(1, 4, 1)),
+        Planner('nb_epoch', range(1, 3, 1), runs_basename='e'),
     ])
 
     print(len(planner))
 
+    # At every iteration of the loop the settings will be update according to the planner current state
     for run_name in planner:
-        # At every iteration of the loop the settings will be update according to the planner current state
+        # Set the name of this run according to the planner
+        # All other settings are already set during the "next" operation
+        settings.run_name = run_name
         # Start the run
         main()

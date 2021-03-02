@@ -1,5 +1,5 @@
 import math
-from typing import Collection, Iterator, List, Optional
+from typing import Any, Collection, Iterator, List, Optional
 
 from utils.settings import settings
 
@@ -12,18 +12,19 @@ class BasePlanner:
 
     def __init__(self, runs_basename: str = ''):
         self.runs_basename = runs_basename
+        self.num_count = 0
 
-    def format_name(self, iteration_num: int):
-        return f'{self.runs_basename}-{iteration_num:03d}'
+    def basename(self):
+        return f'{self.runs_basename}-{self.num_count:03d}'
 
     def __iter__(self) -> Iterator:
-        raise NotImplemented('This abstract class need to override iteration an length methods.')
+        raise NotImplemented('This abstract class need to override iteration an length methods')
 
-    def __next__(self) -> str:
-        raise NotImplemented('This abstract class need to override iteration an length methods.')
+    def __next__(self):
+        self.num_count += 1
 
     def __len__(self) -> int:
-        raise NotImplemented('This abstract class need to override iteration an length methods.')
+        raise NotImplemented('This abstract class need to override iteration an length methods')
 
 
 class Planner(BasePlanner):
@@ -33,33 +34,32 @@ class Planner(BasePlanner):
 
     def __init__(self, setting_name: str, setting_values: Collection, runs_basename: str = ''):
         super().__init__(runs_basename)
-        # If no runs basename provided use the variable setting as default
-        if not runs_basename:
-            self.runs_basename = setting_name
 
         self.setting_name = setting_name
         self.setting_values = setting_values
         self._values_iterator = None
 
     def __iter__(self) -> Iterator:
-        self._values_iterator = enumerate(self.setting_values, start=1)
+        self._values_iterator = iter(self.setting_values)
         return self
 
     def __next__(self) -> str:
+        super().__next__()
         # Get new value
-        iter_num, value = next(self._values_iterator)
-
-        # Set run name
-        settings.run_name = self.format_name(iter_num)
+        value = next(self._values_iterator)
 
         # Set new value
         setattr(settings, self.setting_name, value)
 
         # Return the name of this run
-        return settings.run_name
+        return self.format_name(value)
 
     def __len__(self) -> int:
         return len(self.setting_values)
+
+    def format_name(self, value: Any) -> str:
+        # If no runs basename provided use the variable name and value as run name
+        return self.basename() if self.runs_basename else f'{self.setting_name}-{value}'
 
 
 class SequencePlanner(BasePlanner):
@@ -88,9 +88,11 @@ class SequencePlanner(BasePlanner):
         return self
 
     def __next__(self):
+        super().__next__()
         try:
             # Try to iterate inside the current planner
-            return next(self._current_planner_iterator)
+            sub_run_name = next(self._current_planner_iterator)
+            return self.format_name(sub_run_name)
         except StopIteration:
             # FIXME reset settings here
             # If current planner is over, open the next one
@@ -102,6 +104,10 @@ class SequencePlanner(BasePlanner):
 
     def __len__(self):
         return sum(map(len, self.planners))
+
+    def format_name(self, sub_run_name: str) -> str:
+        # If no runs basename provided use the name of the last sub-planner
+        return self.basename() if self.runs_basename else sub_run_name
 
 
 class ParallelPlanner(BasePlanner):
@@ -132,13 +138,18 @@ class ParallelPlanner(BasePlanner):
         return self
 
     def __next__(self):
-        names_values = [next(it) for it in self._planners_iterators]
+        super().__next__()
+        sub_runs_name = [next(it) for it in self._planners_iterators]
 
-        # Return the new values, for information only, because it's already set
-        return names_values
+        return self.format_name(sub_runs_name)
 
     def __len__(self):
         return len(self.planners[0])
+
+    def format_name(self, sub_runs_name: List[str]) -> str:
+        # If no runs basename provided use the concatenation of all sub-planners names
+        # As: "planner-1_planner-2_planner-3"
+        return self.basename() if self.runs_basename else '_'.join(sub_runs_name)
 
 
 class CombinatorPlanner(BasePlanner):
@@ -156,6 +167,7 @@ class CombinatorPlanner(BasePlanner):
 
         self.planners: List[BasePlanner] = planners
         self._planners_iterators: List[Optional[Iterator]] = [None] * len(planners)
+        self._runs_name: List[Optional[str]] = [None] * len(planners)
         self._first_iter = True
 
     def __iter__(self):
@@ -165,14 +177,17 @@ class CombinatorPlanner(BasePlanner):
         return self
 
     def __next__(self):
+        super().__next__()
         # For the first iteration, initialise every sub-planners with their first value
         if self._first_iter:
             self._first_iter = False
-            return [next(it) for it in self._planners_iterators]
+            self._runs_name = [next(it) for it in self._planners_iterators]
+            return self.format_name()
 
         for i in range(len(self.planners)):
             try:
-                return next(self._planners_iterators[i])
+                self._runs_name[i] = next(self._planners_iterators[i])
+                return self.format_name()
             except StopIteration:
                 # If stop iteration trigger for the last sub-planner then the iteration is over and we let error
                 # propagate.
@@ -181,7 +196,12 @@ class CombinatorPlanner(BasePlanner):
 
                 # If stop iteration trigger for an intermediate sub-planner, reset it and continue the loop
                 self._planners_iterators[i] = iter(self.planners[i])
-                next(self._planners_iterators[i])
+                self._runs_name[i] = next(self._planners_iterators[i])
 
     def __len__(self):
         return math.prod(map(len, self.planners))
+
+    def format_name(self) -> str:
+        # If no runs basename provided use the concatenation of all sub-planners names
+        # As: "planner-1_planner-2_planner-3"
+        return self.basename() if self.runs_basename else '_'.join(self._runs_name)
