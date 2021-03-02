@@ -1,5 +1,5 @@
 from main import main
-from utils.planner import Planner, SequencePlanner
+from utils.planner import CombinatorPlanner, ParallelPlanner, Planner
 from utils.settings import settings
 
 if __name__ == '__main__':
@@ -10,9 +10,12 @@ if __name__ == '__main__':
     # TODO do a checking (names and values) before to start to avoid error during the run
 
     # planner = Planner('train_point_per_class', range(50, 501, 50))
-    planner = SequencePlanner([
-        Planner('train_point_per_class', range(250, 501, 50)),
-        Planner('nb_epoch', range(1, 3, 1), runs_basename='e'),
+    planner = CombinatorPlanner([
+        ParallelPlanner([
+            Planner('train_point_per_class', range(500, 701, 100), runs_basename='nb_train'),
+            Planner('test_point_per_class', range(200, 401, 100), runs_basename='nb_test'),
+        ]),
+        Planner('nb_epoch', [1, 5, 10])
     ])
 
     print(len(planner))

@@ -149,6 +149,7 @@ class SequencePlanner(BasePlanner):
         """ See :func:`~utils.planner.BasePlanner.__iter__` """
         # First iterate over every planners
         self._planners_iterator = iter(self.planners)
+        self._current_planner_id = 0
         # Then iterate inside each planner
         self._current_planner_iterator = iter(next(self._planners_iterator))
 
