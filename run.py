@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 import torch
+from codetiming import Timer
 from torch.nn import Module
 from torch.utils.data import Dataset
 
@@ -50,6 +51,8 @@ def clean_up() -> None:
 
     # Save recorded timers in a file
     save_timers()
+    # Clear all timers
+    Timer.timers.clear()
 
     # Disable the log file, so a new one can be set later
     if settings.run_name and settings.logger_file_enable:
