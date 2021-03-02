@@ -14,17 +14,20 @@ class BasePlanner:
         self.runs_basename = runs_basename
         self.num_count = 0
 
-    def basename(self):
-        return f'{self.runs_basename}-{self.num_count:03d}'
-
     def __iter__(self) -> Iterator:
-        raise NotImplemented('This abstract class need to override iteration an length methods')
+        raise NotImplemented('Iteration abstract method need to be override')
 
     def __next__(self):
         self.num_count += 1
 
     def __len__(self) -> int:
-        raise NotImplemented('This abstract class need to override iteration an length methods')
+        raise NotImplemented('Length abstract method need to be override')
+
+    def basename(self):
+        return f'{self.runs_basename}-{self.num_count:03d}'
+
+    def reset_original_values(self):
+        raise NotImplemented('Reset abstract method need to be override ')
 
 
 class Planner(BasePlanner):
@@ -37,6 +40,7 @@ class Planner(BasePlanner):
 
         self.setting_name = setting_name
         self.setting_values = setting_values
+        self._setting_original_value = getattr(settings, setting_name)
         self._values_iterator = None
 
     def __iter__(self) -> Iterator:
@@ -61,6 +65,10 @@ class Planner(BasePlanner):
         # If no runs basename provided use the variable name and value as run name
         return self.basename() if self.runs_basename else f'{self.setting_name}-{value}'
 
+    def reset_original_values(self):
+        if getattr(settings, self.setting_name) != self._setting_original_value:
+            setattr(settings, self.setting_name, self._setting_original_value)
+
 
 class SequencePlanner(BasePlanner):
     """
@@ -76,6 +84,7 @@ class SequencePlanner(BasePlanner):
             raise ValueError('Empty planners list for sequence planner')
 
         self.planners = planners
+        self._current_planner_id = 0
         self._planners_iterator = None
         self._current_planner_iterator = None
 
@@ -94,7 +103,10 @@ class SequencePlanner(BasePlanner):
             sub_run_name = next(self._current_planner_iterator)
             return self.format_name(sub_run_name)
         except StopIteration:
-            # FIXME reset settings here
+            # Reset settings as original value before next planner
+            self.planners[self._current_planner_id].reset_original_values()
+            self._current_planner_id += 1
+
             # If current planner is over, open the next one
             # If it's already the last planner then the StopIteration will be raise again here
             self._current_planner_iterator = iter(next(self._planners_iterator))
@@ -108,6 +120,10 @@ class SequencePlanner(BasePlanner):
     def format_name(self, sub_run_name: str) -> str:
         # If no runs basename provided use the name of the last sub-planner
         return self.basename() if self.runs_basename else sub_run_name
+
+    def reset_original_values(self):
+        for p in self.planners:
+            p.reset_original_values()
 
 
 class ParallelPlanner(BasePlanner):
@@ -150,6 +166,10 @@ class ParallelPlanner(BasePlanner):
         # If no runs basename provided use the concatenation of all sub-planners names
         # As: "planner-1_planner-2_planner-3"
         return self.basename() if self.runs_basename else '_'.join(sub_runs_name)
+
+    def reset_original_values(self):
+        for p in self.planners:
+            p.reset_original_values()
 
 
 class CombinatorPlanner(BasePlanner):
@@ -205,3 +225,7 @@ class CombinatorPlanner(BasePlanner):
         # If no runs basename provided use the concatenation of all sub-planners names
         # As: "planner-1_planner-2_planner-3"
         return self.basename() if self.runs_basename else '_'.join(self._runs_name)
+
+    def reset_original_values(self):
+        for p in self.planners:
+            p.reset_original_values()

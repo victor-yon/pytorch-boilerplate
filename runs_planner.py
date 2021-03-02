@@ -1,14 +1,16 @@
 from main import main
-from utils.planner import CombinatorPlanner, Planner
+from utils.planner import Planner, SequencePlanner
 from utils.settings import settings
 
 if __name__ == '__main__':
     # TODO add train once option
     # TODO skip existing runs names
     # TODO add a default settings file for run planner
+    # TODO add loading bar
+    # TODO do a checking (names and values) before to start to avoid error during the run
 
     # planner = Planner('train_point_per_class', range(50, 501, 50))
-    planner = CombinatorPlanner([
+    planner = SequencePlanner([
         Planner('train_point_per_class', range(250, 501, 50)),
         Planner('nb_epoch', range(1, 3, 1), runs_basename='e'),
     ])

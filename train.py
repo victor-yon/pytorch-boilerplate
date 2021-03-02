@@ -71,6 +71,8 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset, device
             # Epoch statistics
             _record_epoch_stats(epochs_stats, loss_evolution[-len(train_loader):])
 
+    # TODO clear memory after the run (stuck in GPU), for train and test
+
     if len(accuracy_evolution) == 0:
         save_results(epochs_stats=epochs_stats)
     else:
