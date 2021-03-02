@@ -8,6 +8,8 @@ class BasePlanner:
     """
     Abstract class Base Planner.
     Use one of its children class.
+    Global settings are changed in place, but at the end of the iteration every settings are rollback to their initial
+    values.
     """
 
     def __init__(self, runs_basename: Optional[str] = None):
@@ -20,6 +22,7 @@ class BasePlanner:
         """
         self.runs_basename = runs_basename
         self.num_count = 0
+        self.is_sub_planner = False
 
     def __iter__(self) -> Iterator:
         """
@@ -64,10 +67,20 @@ class BasePlanner:
         """
         self.num_count = 0
 
+    def stop_iter(self):
+        """
+        Clean up before stop iteration, if this is the main planner (not a sub-planner that compose a bigger one)
+        """
+        if not self.is_sub_planner:
+            self.reset_original_values()
+            self.reset_state()
+
 
 class Planner(BasePlanner):
     """
     Simple planner use to start a set of runs with a different values for one setting.
+    Global settings are changed in place, but at the end of the iteration every settings are rollback to their initial
+    values.
     """
 
     def __init__(self, setting_name: str, setting_values: Collection, runs_basename: str = ''):
@@ -99,8 +112,14 @@ class Planner(BasePlanner):
 
     def __next__(self) -> str:
         """ See :func:`~utils.planner.BasePlanner.__next__` """
-        # Get new value
-        value = next(self._values_iterator)
+
+        try:
+            # Get new value
+            value = next(self._values_iterator)
+        except StopIteration:
+            # Call last method before to trigger StopIteration
+            self.stop_iter()
+            raise
 
         # Set new value
         setattr(settings, self.setting_name, value)
@@ -143,6 +162,8 @@ class SequencePlanner(BasePlanner):
     To organise planners by sequential order.
     When the current planner is over the next one on the list will start.
     The total length of this sequence will be the sum of each sub-planners.
+    Global settings are changed in place, but at the end of the iteration every settings are rollback to their initial
+    values.
     """
 
     def __init__(self, planners: List[BasePlanner], runs_basename: str = ''):
@@ -164,6 +185,10 @@ class SequencePlanner(BasePlanner):
         self._current_planner_id = 0
         self._planners_iterator = None
         self._current_planner_iterator = None
+
+        # Tell to sub-planners who is the boss
+        for p in self.planners:
+            p.is_sub_planner = True
 
     def __iter__(self):
         """ See :func:`~utils.planner.BasePlanner.__iter__` """
@@ -188,9 +213,14 @@ class SequencePlanner(BasePlanner):
             self.planners[self._current_planner_id].reset_original_values()
             self._current_planner_id += 1
 
-            # If current planner is over, open the next one
-            # If it's already the last planner then the StopIteration will be raise again here
-            self._current_planner_iterator = iter(next(self._planners_iterator))
+            try:
+                # If current planner is over, open the next one
+                # If it's already the last planner then the StopIteration will be raise again here
+                self._current_planner_iterator = iter(next(self._planners_iterator))
+            except StopIteration:
+                # Call last method before to trigger StopIteration
+                self.stop_iter()
+                raise
 
             # Recursive call with the new planner
             return next(self)
@@ -231,6 +261,8 @@ class ParallelPlanner(BasePlanner):
     All planners will be apply at the same time.
     The total length of this planner will be equal to the length of the sub-planners (which should all have the same
     length).
+    Global settings are changed in place, but at the end of the iteration every settings are rollback to their initial
+    values.
     """
 
     def __init__(self, planners: List[BasePlanner], runs_basename: str = ''):
@@ -257,6 +289,10 @@ class ParallelPlanner(BasePlanner):
         self.planners: List[BasePlanner] = planners
         self._planners_iterators: List[Optional[Iterator]] = [None] * len(planners)
 
+        # Tell to sub-planners who is the boss
+        for p in self.planners:
+            p.is_sub_planner = True
+
     def __iter__(self):
         """ See :func:`~utils.planner.BasePlanner.__iter__` """
         # Iterate over every planners
@@ -266,7 +302,12 @@ class ParallelPlanner(BasePlanner):
 
     def __next__(self):
         """ See :func:`~utils.planner.BasePlanner.__next__` """
-        sub_runs_name = [next(it) for it in self._planners_iterators]
+        try:
+            sub_runs_name = [next(it) for it in self._planners_iterators]
+        except StopIteration:
+            # Call last method before to trigger StopIteration
+            self.stop_iter()
+            raise
 
         # Increase count and return the name of this run
         self.incr_num()
@@ -305,6 +346,8 @@ class CombinatorPlanner(BasePlanner):
     To organise the combination of planners.
     Each possible combination of values from planners will be used.
     The total length will be the product of the length of each sub-planners.
+    Global settings are changed in place, but at the end of the iteration every settings are rollback to their initial
+    values.
     """
 
     def __init__(self, planners: List[BasePlanner], runs_basename: str = ''):
@@ -328,6 +371,10 @@ class CombinatorPlanner(BasePlanner):
         self._planners_iterators: List[Optional[Iterator]] = [None] * len(planners)
         self._runs_name: List[Optional[str]] = [None] * len(planners)
         self._first_iter = True
+
+        # Tell to sub-planners who is the boss
+        for p in self.planners:
+            p.is_sub_planner = True
 
     def __iter__(self):
         """ See :func:`~utils.planner.BasePlanner.__iter__` """
@@ -356,6 +403,8 @@ class CombinatorPlanner(BasePlanner):
                 # If stop iteration trigger for the last sub-planner then the iteration is over and we let error
                 # propagate.
                 if i == (len(self.planners) - 1):
+                    # Call last method before to trigger StopIteration
+                    self.stop_iter()
                     raise
 
                 # If stop iteration trigger for an intermediate sub-planner, reset it and continue the loop

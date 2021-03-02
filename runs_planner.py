@@ -25,10 +25,6 @@ def start_planner(runs_planner: BasePlanner, skip_validation: bool = False):
         except AssertionError as exc:
             raise RuntimeError('Invalid planned settings, runs aborted before to start') from exc
 
-        # Return every settings at their original values (before the validation)
-        runs_planner.reset_original_values()
-        runs_planner.reset_state()
-
         logger.info('Completed successful validation of the runs planner')
 
     logger.info(f'Starting a set of {len(runs_planner)} runs with a planner')
@@ -49,7 +45,7 @@ if __name__ == '__main__':
             Planner('train_point_per_class', range(500, 701, 100), runs_basename='nb_train'),
             Planner('test_point_per_class', range(200, 401, 100), runs_basename='nb_test'),
         ]),
-        Planner('nb_epoch', [1, 5, 10])
+        Planner('nb_epoch', [10, 5, 2])
     ])
 
     start_planner(planner)
