@@ -27,7 +27,7 @@ def start_planner(runs_planner: BasePlanner, skip_validation: bool = False):
 
         # Return every settings at their original values (before the validation)
         runs_planner.reset_original_values()
-        runs_planner.reset_counters()
+        runs_planner.reset_state()
 
         logger.info('Completed successful validation of the runs planner')
 

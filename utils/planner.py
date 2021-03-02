@@ -26,15 +26,14 @@ class BasePlanner:
         Create the planner iterator.
         :return: Itself
         """
-        raise NotImplemented('Iteration abstract method need to be override')
+        raise NotImplemented('Iteration abstract methods need to be override')
 
-    # noinspection PyTypeChecker
     def __next__(self) -> str:
         """
         Change the next setting in-place, according to the planner
         :return: The name of the current run
         """
-        self.num_count += 1
+        raise NotImplemented('Iteration abstract methods need to be override')
 
     def __len__(self) -> int:
         """
@@ -42,6 +41,9 @@ class BasePlanner:
         :return: The length
         """
         raise NotImplemented('Length abstract method need to be override')
+
+    def incr_num(self) -> None:
+        self.num_count += 1
 
     def basename(self):
         """
@@ -56,7 +58,7 @@ class BasePlanner:
         """
         raise NotImplemented('Reset abstract method need to be override ')
 
-    def reset_counters(self) -> None:
+    def reset_state(self) -> None:
         """
         Reset the counter used in basename to 0.
         """
@@ -97,14 +99,14 @@ class Planner(BasePlanner):
 
     def __next__(self) -> str:
         """ See :func:`~utils.planner.BasePlanner.__next__` """
-        super().__next__()
         # Get new value
         value = next(self._values_iterator)
 
         # Set new value
         setattr(settings, self.setting_name, value)
 
-        # Return the name of this run
+        # Increase count and return the name of this run
+        self.incr_num()
         return self.format_name(value)
 
     def __len__(self) -> int:
@@ -128,6 +130,12 @@ class Planner(BasePlanner):
             if getattr(settings, self.setting_name) != self._setting_original_value:
                 setattr(settings, self.setting_name, self._setting_original_value)
             self._setting_original_value = None
+
+    def reset_state(self) -> None:
+        """ See :func:`~utils.planner.BasePlanner.reset_counters` """
+        super().reset_state()
+        self._setting_original_value = None  # Will be set when the iteration start
+        self._values_iterator = None
 
 
 class SequencePlanner(BasePlanner):
@@ -169,10 +177,11 @@ class SequencePlanner(BasePlanner):
 
     def __next__(self):
         """ See :func:`~utils.planner.BasePlanner.__next__` """
-        super().__next__()
         try:
             # Try to iterate inside the current planner
             sub_run_name = next(self._current_planner_iterator)
+            # Increase count and return the name of this run
+            self.incr_num()
             return self.format_name(sub_run_name)
         except StopIteration:
             # Reset settings as original value before next planner
@@ -206,10 +215,14 @@ class SequencePlanner(BasePlanner):
         for p in self.planners:
             p.reset_original_values()
 
-    def reset_counters(self) -> None:
+    def reset_state(self) -> None:
         """ See :func:`~utils.planner.BasePlanner.reset_counters` """
+        super().reset_state()
+        self._current_planner_id = 0
+        self._planners_iterator = None
+        self._current_planner_iterator = None
         for p in self.planners:
-            p.reset_counters()
+            p.reset_state()
 
 
 class ParallelPlanner(BasePlanner):
@@ -253,9 +266,10 @@ class ParallelPlanner(BasePlanner):
 
     def __next__(self):
         """ See :func:`~utils.planner.BasePlanner.__next__` """
-        super().__next__()
         sub_runs_name = [next(it) for it in self._planners_iterators]
 
+        # Increase count and return the name of this run
+        self.incr_num()
         return self.format_name(sub_runs_name)
 
     def __len__(self):
@@ -278,10 +292,12 @@ class ParallelPlanner(BasePlanner):
         for p in self.planners:
             p.reset_original_values()
 
-    def reset_counters(self) -> None:
+    def reset_state(self) -> None:
         """ See :func:`~utils.planner.BasePlanner.reset_counters` """
+        super().reset_state()
+        self._planners_iterators = [None] * len(self.planners)
         for p in self.planners:
-            p.reset_counters()
+            p.reset_state()
 
 
 class CombinatorPlanner(BasePlanner):
@@ -322,16 +338,19 @@ class CombinatorPlanner(BasePlanner):
 
     def __next__(self):
         """ See :func:`~utils.planner.BasePlanner.__next__` """
-        super().__next__()
         # For the first iteration, initialise every sub-planners with their first value
         if self._first_iter:
             self._first_iter = False
             self._runs_name = [next(it) for it in self._planners_iterators]
+            # Increase count and return the name of this run
+            self.incr_num()
             return self.format_name()
 
         for i in range(len(self.planners)):
             try:
                 self._runs_name[i] = next(self._planners_iterators[i])
+                # Increase count and return the name of this run
+                self.incr_num()
                 return self.format_name()
             except StopIteration:
                 # If stop iteration trigger for the last sub-planner then the iteration is over and we let error
@@ -362,7 +381,11 @@ class CombinatorPlanner(BasePlanner):
         for p in self.planners:
             p.reset_original_values()
 
-    def reset_counters(self) -> None:
+    def reset_state(self) -> None:
         """ See :func:`~utils.planner.BasePlanner.reset_counters` """
+        super().reset_state()
+        self._planners_iterators = [None] * len(self.planners)
+        self._runs_name = [None] * len(self.planners)
+        self._first_iter = True
         for p in self.planners:
-            p.reset_counters()
+            p.reset_state()
