@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 from utils.output import save_plot
 
 
+# TODO create a dataset parent class
 class MockClassificationDataset(Dataset):
     """
     Randomly generate a datasets of 2 dimensional points grouped in N classes.
