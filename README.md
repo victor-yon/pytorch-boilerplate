@@ -64,6 +64,6 @@ Their values can be overridden by:
 * __run.py__: Full script that contains the run steps logic.
 * __runs_analyse.py__: Script to aggregate and plot result from several runs.
 * __runs_planner.py__: Script to start a list of runs with different settings one by one.
-* __settings.yaml__: Local settings file to override default values. This file shouldn't be commited.
+* __settings.yaml__: Local settings file to override default values. This file shouldn't be committed.
 * __test.py__: Script that contains the network testing logic.
 * __train.py__: Script that contains the network training logic.
