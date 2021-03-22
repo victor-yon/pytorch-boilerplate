@@ -1,10 +1,16 @@
-from main import main
+from run import start_run
 from utils.logger import logger
 from utils.planner import BasePlanner, CombinatorPlanner, ParallelPlanner, Planner
 from utils.settings import settings
 
 
-def start_planner(runs_planner: BasePlanner, skip_validation: bool = False):
+def start_runs_planner(runs_planner: BasePlanner, skip_validation: bool = False) -> None:
+    """
+    Start a list of runs.
+
+    :param runs_planner: The planner that specify the settings and the order.
+    :param skip_validation: If true skip the settings validation step before real start
+    """
     # TODO add train once option
     # TODO skip existing runs names
     # TODO add loading bar
@@ -36,17 +42,17 @@ def start_planner(runs_planner: BasePlanner, skip_validation: bool = False):
         # All other settings are already set during the "next" operation
         settings.run_name = run_name
         # Start the run
-        main()
+        start_run()
 
 
 if __name__ == '__main__':
     # Create the planner by defining the settings configurations evolution during the runs
     planner = CombinatorPlanner([
         ParallelPlanner([
-            Planner('train_point_per_class', range(500, 701, 100), runs_basename='nb_train'),
+            Planner('train_point_per_class', range(500, 701, 100), runs_basename='nb_train?'),
             Planner('test_point_per_class', range(200, 401, 100), runs_basename='nb_test'),
         ]),
         Planner('nb_epoch', [10, 5, 2])
     ])
 
-    start_planner(planner)
+    start_runs_planner(planner)

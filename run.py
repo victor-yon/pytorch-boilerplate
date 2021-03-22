@@ -3,9 +3,8 @@ import random
 import numpy as np
 import torch
 from codetiming import Timer
-from torch.nn import Module
-from torch.utils.data import Dataset
 
+from main import build_network, load_datasets
 from test import test
 from train import train
 from utils.logger import logger
@@ -59,37 +58,69 @@ def clean_up() -> None:
         logger.disable_log_file()
 
 
-@SectionTimer('run')
-def run(train_dataset: Dataset, test_dataset: Dataset, network: Module) -> None:
+def start_run() -> None:
     """
     Run the training and the testing of the network.
-
-    :param train_dataset: The training dataset
-    :param test_dataset: The testing dataset
-    :param network: The neural network to train
+    Run steps:
+        - preparation
+        - load datasets
+        - build network
+        - send data to device (GPU/CPU)
+        - train network
+        - test network
+        - clean up
     """
-    # Automatically chooses between CPU and GPU if not specified
-    if settings.device is None or settings.device == 'auto':
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    else:
-        device = torch.device(settings.device)
 
-    logger.debug(f'pyTorch device selected: {device}')
+    # Prepare the environment
+    preparation()
 
-    # Send the network and the datasets to the selected device (CPU or CUDA)
-    # We assume the GPU have enough memory to store the whole network and datasets. If not it should be split.
-    network.to(device)
-    train_dataset.to(device)
-    test_dataset.to(device)
+    # Catch and log every exception during the runtime
+    # noinspection PyBroadException
+    try:
+        with SectionTimer('run'):
+            with SectionTimer('datasets loading', 'debug'):
+                # Load dataset from user function
+                train_dataset, test_dataset = load_datasets()
 
-    # Save network stats and show if debug enable
-    network_metrics(network, test_dataset[0][0].shape, device)
+            # Build network from user function
+            network = build_network()
 
-    # Start the training
-    train(network, train_dataset, test_dataset, device)
+            # Automatically chooses between CPU and GPU if not specified
+            if settings.device is None or settings.device == 'auto':
+                device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            else:
+                device = torch.device(settings.device)
 
-    # Start normal test
-    test(network, test_dataset, device, final=True)
+            logger.debug(f'pyTorch device selected: {device}')
 
-    # Arrived to the end successfully (no error)
-    save_results(success_run=True)
+            # Send the network and the datasets to the selected device (CPU or CUDA)
+            # We assume the GPU have enough memory to store the whole network and datasets. If not it should be split.
+            network.to(device)
+            train_dataset.to(device)
+            test_dataset.to(device)
+
+            # Save network stats and show if debug enable
+            network_metrics(network, test_dataset[0][0].shape, device)
+
+            # Start the training
+            train(network, train_dataset, test_dataset, device)
+
+            # Start normal test
+            test(network, test_dataset, device, final=True)
+
+            # Arrived to the end successfully (no error)
+            save_results(success_run=True)
+
+    except KeyboardInterrupt:
+        logger.error('Run interrupted by the user.')
+        raise  # Let it go to stop the runs planner if needed
+    except Exception:
+        logger.critical('Run interrupted by an unexpected error.', exc_info=True)
+        # TODO deal with this error in runs planner (eg. stop after a count)
+    finally:
+        # Clean up the environment, ready for a new run
+        clean_up()
+
+
+if __name__ == '__main__':
+    start_run()

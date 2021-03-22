@@ -55,9 +55,6 @@ class MockClassificationDataset(Dataset):
         """
         Create a plot that represent the dataset and show it.
         """
-        sns.scatterplot(x=self._features[:, 0],
-                        y=self._features[:, 1],
-                        hue=self._labels,
-                        markers=True)
+        sns.scatterplot(x=self._features[:, 0], y=self._features[:, 1], hue=self._labels, markers=True)
         plt.title(f'Data from {self._nb_classes} classes')
         save_plot('mock_dataset')

@@ -8,6 +8,7 @@ import configargparse
 from utils.logger import logger
 
 
+# TODO create a parent class to wrap all the logic
 @dataclass(init=False, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False)
 class Settings:
     """
@@ -18,7 +19,6 @@ class Settings:
         - environment variables
         - arguments of the command line (with "--" in front)
 
-    TODO create a parent class to wrap all the logic
     """
 
     # Name of the run to save the result ('tmp' for temporary files)
@@ -58,8 +58,8 @@ class Settings:
         Validate settings.
         """
         # TODO automatically check type based on type hint
-        assert not re.search('[/:"*?<>|\\\\]+', self.run_name), 'Invalid character in run name ' \
-                                                                '(should be a valid directory name)'
+        assert self.run_name is None or not re.search('[/:"*?<>|\\\\]+', self.run_name), \
+            'Invalid character in run name (should be a valid directory name)'
 
         possible_log_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
         assert self.logger_console_level.upper() in possible_log_levels or isinstance(self.logger_console_level, int), \

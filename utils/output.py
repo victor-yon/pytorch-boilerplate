@@ -40,7 +40,7 @@ def init_out_directory() -> None:
     img_dir = run_dir / 'img'
 
     # If the keyword 'tmp' is used as run name, then remove the previous files
-    if dir_name.lower() == 'tmp':
+    if dir_name == 'tmp':
         logger.warning(f'Using temporary directory to save this run results.')
         if run_dir.exists():
             logger.warning(f'Previous temporary files removed: {run_dir}')
