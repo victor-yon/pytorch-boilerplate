@@ -50,6 +50,7 @@ Their values can be overridden by:
   pytorch [Dataset](https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset) class.
 * __networks/__: Directory that contains the list of available neural network that extend the
   pytorch [Module](https://pytorch.org/docs/stable/generated/torch.nn.Module.html) class.
+* __out/__: Directory where named run output will be saved. A subdirectory will be generated for each new run.
 * __plots/__: Directory that contains all plotting scripts.
 * __utils/__: Directory that contains utility scripts, using them is optional, but they simplify some tasks.
   * __logger.py__: Class wrapper to handle console and file logging.
@@ -63,5 +64,6 @@ Their values can be overridden by:
 * __run.py__: Full script that contains the run steps logic.
 * __runs_analyse.py__: Script to aggregate and plot result from several runs.
 * __runs_planner.py__: Script to start a list of runs with different settings one by one.
+* __settings.yaml__: Local settings file to override default values. This file shouldn't be commited.
 * __test.py__: Script that contains the network testing logic.
 * __train.py__: Script that contains the network training logic.
