@@ -1,4 +1,5 @@
 import argparse
+import re
 from dataclasses import asdict, dataclass
 from typing import Union
 
@@ -57,7 +58,9 @@ class Settings:
         Validate settings.
         """
         # TODO automatically check type based on type hint
-        # TODO check if run_name have valid character for a file
+        assert not re.search('[/:"*?<>|\\\\]+', self.run_name), 'Invalid character in run name ' \
+                                                                '(should be a valid directory name)'
+
         possible_log_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
         assert self.logger_console_level.upper() in possible_log_levels or isinstance(self.logger_console_level, int), \
             f"Invalid console log level '{self.logger_console_level}'"

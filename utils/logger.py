@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Optional, TextIO, Union
 
 
-# TODO implement a timer with a wrapper (https://towardsdatascience.com/using-wrappers-to-log-in-python-ccffe4c46b54)
-
 class ColorFormatter(logging.Formatter):
     """
     Logging formatter supporting colored output.
@@ -181,6 +179,6 @@ class SexyLogger(logging.Logger):
         self.setLevel(min(self.console_handler.level, self.file_handler.level))
 
 
-# TODO dynamic name with the template
+# TODO dynamic name with the template (not possible with github yet)
 # Create the logger singleton
 logger: SexyLogger = SexyLogger(logger_name='pytorch-boilerplate')
