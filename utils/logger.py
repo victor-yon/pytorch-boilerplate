@@ -9,7 +9,6 @@ class ColorFormatter(logging.Formatter):
     Logging formatter supporting colored output.
     """
 
-    # TODO check color working on windows (see https://stackoverflow.com/a/61043789/2666094)
     # See https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
     COLOR_CODES = {
         logging.CRITICAL: "\033[1;31m",  # bold red text
@@ -32,7 +31,6 @@ class SexyLogger(logging.Logger):
     """
     A logger which handle console with fancy color and file output.
     """
-    # TODO add message console highlight option
     console_handler: logging.Handler = None
     file_handler: Optional[logging.Handler] = None
 
@@ -74,7 +72,6 @@ class SexyLogger(logging.Logger):
             console_log_output = sys.stdout  # Default value
 
         # Create console handler
-        # TODO send warnings and errors in stderr
         self.console_handler = logging.StreamHandler(console_log_output)
 
         # Set console log level (and the global level at the same time)
@@ -179,6 +176,6 @@ class SexyLogger(logging.Logger):
         self.setLevel(min(self.console_handler.level, self.file_handler.level))
 
 
-# TODO dynamic name with the template (not possible with github yet)
 # Create the logger singleton
+# TODO rename the logger name with the current project name
 logger: SexyLogger = SexyLogger(logger_name='pytorch-boilerplate')

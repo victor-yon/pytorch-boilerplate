@@ -116,7 +116,6 @@ def start_run() -> None:
         raise  # Let it go to stop the runs planner if needed
     except Exception:
         logger.critical('Run interrupted by an unexpected error.', exc_info=True)
-        # TODO deal with this error in runs planner (eg. stop after a count)
     finally:
         # Clean up the environment, ready for a new run
         clean_up()

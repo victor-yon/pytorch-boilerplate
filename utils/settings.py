@@ -8,7 +8,6 @@ import configargparse
 from utils.logger import logger
 
 
-# TODO create a parent class to wrap all the logic
 @dataclass(init=False, repr=True, eq=True, order=False, unsafe_hash=False, frozen=False)
 class Settings:
     """
@@ -29,7 +28,7 @@ class Settings:
     run_name: str = ''
 
     # The seed to use for all random number generator during this run.
-    seed: int = 42  # FIXME allow to set is as None from args or settings file
+    seed: int = 42
 
     # ==================================================================================================================
     # ============================================== Logging and Outputs ===============================================
@@ -49,11 +48,6 @@ class Settings:
     # If True use a visual progress bar in the console during training and loading.
     # Should be use with a logger_console_level as INFO or more for better output.
     visual_progress_bar: bool = True
-
-    # The console logging refresh time during training and testing (used only if visual_progress_bar is False).
-    # Value in second.
-    # TODO use logger_progress_frequency
-    logger_progress_frequency: int = 10
 
     # If True show matplotlib images when they are ready.
     show_images: bool = True
@@ -124,7 +118,6 @@ class Settings:
         """
         Validate settings values, to assure integrity and prevent issues during the run.
         """
-        # TODO automatically check type based on type hint
 
         # General
         assert self.run_name is None or not re.search('[/:"*?<>|\\\\]+', self.run_name), \
@@ -143,7 +136,6 @@ class Settings:
         assert self.test_point_per_class > 0, 'At least one testing point is required'
 
         # Training
-        # TODO should also accept "cuda:1" format
         assert self.device in ('auto', 'cpu', 'cuda'), f'Not valid torch device name: {self.device}'
         assert self.batch_size > 0, 'Batch size should be a positive integer'
         assert self.nb_epoch > 0, 'Number of epoch should be at least 1'
@@ -185,7 +177,6 @@ class Settings:
                        help='path to custom configuration file')
 
         # Create argument for each attribute of this class
-        # TODO create automatic helper with doc string or annotation
         for name, value in asdict(self).items():
             p.add_argument(f'--{name.replace("_", "-")}',
                            f'--{name}',
@@ -193,7 +184,6 @@ class Settings:
                            required=False,
                            type=str_to_bool if type(value) == bool else type(value))
 
-        # TODO deal with unknown arguments with a warning
         # Load arguments form file, environment and command line to override the defaults
         for name, value in vars(p.parse_args()).items():
             if name == 'settings':

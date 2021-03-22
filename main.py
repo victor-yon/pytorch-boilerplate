@@ -12,6 +12,7 @@ def load_datasets() -> Tuple[Dataset, Dataset]:
     """
     :return: The train and test datasets
     """
+    # TODO Load your dataset here
     # Load the training dataset
     train_dataset = MockClassificationDataset(settings.nb_classes, settings.train_point_per_class)
     train_dataset.show_plot()  # Plot and show the data
@@ -26,6 +27,7 @@ def build_network() -> Module:
     """
     :return: The neural network to use for the training and the testing
     """
+    # TODO Create your neural network here
     return SimpleClassifier(input_size=2, nb_classes=settings.nb_classes)
 
 # Execute "run.py" to start

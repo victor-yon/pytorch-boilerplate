@@ -93,8 +93,6 @@ def set_plot_style():
         'axes.labelsize': 13,
         'figure.autolayout': True
     })
-    # TODO Improve images default resolution and/or save as svg/pdf
-    #  (https://blakeaw.github.io/2020-05-25-improve-matplotlib-notebook-inline-res/)
 
 
 def save_network_info(network_metrics: dict) -> None:
@@ -199,8 +197,6 @@ def load_network(network: Module, file_path: Union[str, Path]) -> bool:
     :return: True if the file exist and is loaded, False if the file is not found.
     """
 
-    # TODO move this function as the network method
-
     cache_path = Path(file_path) if isinstance(file_path, str) else file_path
     if cache_path.is_file():
         network.load_state_dict(torch.load(cache_path))
@@ -237,7 +233,6 @@ def load_runs(pattern: str) -> pd.DataFrame:
     :param pattern: The pattern to filter runs
     :return: A dataframe containing all information, with the columns as "file.key"
     """
-    # TODO accept a list of patterns
     data = []
 
     runs_dir = Path(OUT_DIR)
@@ -246,5 +241,4 @@ def load_runs(pattern: str) -> pd.DataFrame:
 
     logger.info(f'{len(data)} run(s) loaded with the pattern "{runs_dir}/{pattern}"')
 
-    # TODO remove columns where nothing change and return them as a vector
     return pd.DataFrame(data)
