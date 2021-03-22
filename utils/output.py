@@ -105,7 +105,7 @@ def save_network_info(network_metrics: dict) -> None:
     """
 
     # Skip saving if the name of the run is not set or nothing to save
-    if not settings.run_name.strip() or len(network_metrics) == 0:
+    if not settings.run_name or len(settings.run_name.strip()) == 0 or len(network_metrics) == 0:
         return
 
     network_info_file = Path(OUT_DIR, settings.run_name, OUT_FILES['network_info'])
@@ -124,7 +124,7 @@ def save_results(**results: Any) -> None:
     """
 
     # Skip saving if the name of the run is not set
-    if not settings.run_name.strip():
+    if not settings.run_name or len(settings.run_name.strip()) == 0:
         return
 
     results_path = Path(OUT_DIR, settings.run_name, OUT_FILES['results'])
@@ -142,13 +142,14 @@ def save_plot(file_name: str) -> None:
     """
 
     # Skip saving if the name of the run is not set
-    if not settings.run_name.strip():
+    if not settings.run_name or len(settings.run_name.strip()) == 0:
         return
 
     save_path = Path(OUT_DIR, settings.run_name, 'img', f'{file_name}.png')
 
-    plt.savefig(save_path)
-    logger.debug(f'Plot saved in {save_path}')
+    if settings.save_images:
+        plt.savefig(save_path)
+        logger.debug(f'Plot saved in {save_path}')
 
     # Plot image or close it
     plt.show(block=False) if settings.show_images else plt.close()
@@ -163,7 +164,7 @@ def save_network(network: Module, file_name: str = 'network') -> None:
     """
 
     # Skip saving if the name of the run is not set
-    if not settings.run_name.strip():
+    if not settings.run_name or len(settings.run_name.strip()) == 0:
         return
 
     cache_path = Path(OUT_DIR, settings.run_name, file_name + '.p')
@@ -177,7 +178,7 @@ def save_timers() -> None:
     """
 
     # Skip saving if the name of the run is not set or nothing to save
-    if not settings.run_name.strip() or len(Timer.timers.data) == 0:
+    if not settings.run_name or len(settings.run_name.strip()) == 0 or len(Timer.timers.data) == 0:
         return
 
     timers_file = Path(OUT_DIR, settings.run_name, OUT_FILES['timers'])

@@ -18,64 +18,138 @@ class Settings:
         - local file (default path: ./settings.yaml)
         - environment variables
         - arguments of the command line (with "--" in front)
-
     """
 
-    # Name of the run to save the result ('tmp' for temporary files)
+    # ==================================================================================================================
+    # ==================================================== General =====================================================
+    # ==================================================================================================================
+
+    # Name of the run to save the result ('tmp' for temporary files).
+    # If empty or None thing is saved.
     run_name: str = ''
 
-    # ======================== Logging and outputs ========================
+    # The seed to use for all random number generator during this run.
+    seed: int = 42  # FIXME allow to set is as None from args or settings file
+
+    # ==================================================================================================================
+    # ============================================== Logging and Outputs ===============================================
+    # ==================================================================================================================
+
+    # The minimal logging level to show in the console (see https://docs.python.org/3/library/logging.html#levels).
     logger_console_level: Union[str, int] = 'INFO'
+
+    # The minimal logging level to write in the log file (see https://docs.python.org/3/library/logging.html#levels).
     logger_file_level: Union[str, int] = 'DEBUG'
+
+    # If True a log file is created for each run with a valid run_name.
+    # The console logger could be enable at the same time.
+    # If False the logging will only be in console.
     logger_file_enable: bool = True
-    logger_progress_frequency: int = 10  # sec
+
+    # If True use a visual progress bar in the console during training and loading.
+    # Should be use with a logger_console_level as INFO or more for better output.
     visual_progress_bar: bool = True
+
+    # The console logging refresh time during training and testing (used only if visual_progress_bar is False).
+    # Value in second.
+    # TODO use logger_progress_frequency
+    logger_progress_frequency: int = 10
+
+    # If True show matplotlib images when they are ready.
     show_images: bool = True
+
+    # If True and the run have a valid name, save matplotlib images in the run directory
+    save_images: bool = True
+
+    # If True and the run have a valid name, save the neural network parameters in the run directory at the end of the
+    # training.
     save_network: bool = True
-    trained_network_cache_path: str = ''
 
-    # ============================ Checkpoints ============================
-    checkpoints_per_epoch: int = 0
-    checkpoint_test_size: int = 200
-    checkpoint_train_size: int = 200
-    checkpoint_save_network: bool = False
+    # ==================================================================================================================
+    # ==================================================== Dataset =====================================================
+    # ==================================================================================================================
 
-    # ============================== Dataset ==============================
+    # The number of classes generated in the mock dataset
     nb_classes: int = 4
+
+    # The number of train data generated in the mock dataset
     train_point_per_class: int = 500
+
+    # The number of test data generated in the mock dataset
     test_point_per_class: int = 200
 
-    # ========================= Training settings =========================
-    seed: int = 42  # FIXME allow to set is as None from args or settings file
+    # ==================================================================================================================
+    # ==================================================== Training ====================================================
+    # ==================================================================================================================
+
+    # If a valid path to a file containing neural network parameters is set, they will be loaded in the current neural
+    # network and the training step will be skipped.
+    trained_network_cache_path: str = ''
+
+    # The pytorch device to use for training and testing. Can be 'cpu', 'cuda' or 'auto'.
+    # The automatic setting will use CUDA is a compatible hardware is detected.
     device: str = 'auto'
+
+    # The learning rate value used by the SGD for parameters update.
     learning_rate: float = 0.001
+
+    # The momentum value used by the SGD for parameters update.
     momentum: float = 0.9
-    batch_size: int = 16
+
+    # The size of the mini-batch for the training and testing.
+    batch_size: int = 32
+
+    # The number of training epoch.
     nb_epoch: int = 8
+
+    # ==================================================================================================================
+    # ================================================== Checkpoints ===================================================
+    # ==================================================================================================================
+
+    # The number of checkpoints per training epoch, if 0 no checkpoint is processed
+    checkpoints_per_epoch: int = 0
+
+    # The number of data in the checkpoint training subset.
+    # Set to 0 to don't compute the train accuracy during checkpoints.
+    checkpoint_train_size: int = 200
+
+    # The number of data in the checkpoint testing subset.
+    # Set to 0 to don't compute the test accuracy during checkpoints.
+    checkpoint_test_size: int = 200
+
+    # If True and the run have a valid name, save the neural network parameters in the run directory at each checkpoint.
+    checkpoint_save_network: bool = False
 
     def validate(self):
         """
-        Validate settings.
+        Validate settings values, to assure integrity and prevent issues during the run.
         """
         # TODO automatically check type based on type hint
+
+        # General
         assert self.run_name is None or not re.search('[/:"*?<>|\\\\]+', self.run_name), \
             'Invalid character in run name (should be a valid directory name)'
 
+        # Logging and Outputs
         possible_log_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
         assert self.logger_console_level.upper() in possible_log_levels or isinstance(self.logger_console_level, int), \
             f"Invalid console log level '{self.logger_console_level}'"
         assert self.logger_file_level.upper() in possible_log_levels or isinstance(self.logger_file_level, int), \
             f"Invalid file log level '{self.logger_file_level}'"
 
-        assert self.checkpoints_per_epoch >= 0, 'The number of checkpoints should be >= 0'
+        # Dataset
         assert self.nb_classes > 0, 'At least one class is required'
         assert self.train_point_per_class > 0, 'At least one training point is required'
         assert self.test_point_per_class > 0, 'At least one testing point is required'
 
+        # Training
         # TODO should also accept "cuda:1" format
         assert self.device in ('auto', 'cpu', 'cuda'), f'Not valid torch device name: {self.device}'
         assert self.batch_size > 0, 'Batch size should be a positive integer'
         assert self.nb_epoch > 0, 'Number of epoch should be at least 1'
+
+        # Checkpoints
+        assert self.checkpoints_per_epoch >= 0, 'The number of checkpoints should be >= 0'
 
     def __init__(self):
         """
