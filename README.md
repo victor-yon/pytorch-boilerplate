@@ -13,13 +13,14 @@ echo "run_name: tmp" >> settings.yaml
 
 ## Template quick start
 
-1. Remove the `.idea` directory if you don't use pyCharm IDE.
+1. Remove the `.idea/` directory if you don't use pyCharm IDE.
 2. In `utils/logger.py` at the last line, set the current project name in: `logger_name='<project name>'`.
 3. Create your own dataset in `datasets/` or remove the folder if you use a dataset already implemented in pytorch.
 4. Create your own neural network in `networks/`.
 5. Replace the dataset and the network in `main.py`.
-6. Run `run.py`
-7. Update the title and description of this README file, then remove this section.
+6. Remove / add settings in `utils/settings.py`
+7. Run `run.py`
+8. Update the title / description of this README file, and remove this section.
 
 ## Run
 
