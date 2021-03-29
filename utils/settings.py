@@ -1,9 +1,10 @@
 import argparse
 import re
 from dataclasses import asdict, dataclass
-from typing import Union
+from typing import Sequence, Union
 
 import configargparse
+from numpy.distutils.misc_util import is_sequence
 
 from utils.logger import logger
 
@@ -79,6 +80,13 @@ class Settings:
     test_point_per_class: int = 200
 
     # ==================================================================================================================
+    # ==================================================== Networks ====================================================
+    # ==================================================================================================================
+
+    # The number hidden layer and their respective number of neurons
+    hidden_layers_size: Sequence = (50, 50)
+
+    # ==================================================================================================================
     # ==================================================== Training ====================================================
     # ==================================================================================================================
 
@@ -142,6 +150,9 @@ class Settings:
         assert self.train_point_per_class > 0, 'At least one training point is required'
         assert self.test_point_per_class > 0, 'At least one testing point is required'
 
+        # Networks
+        assert all((a > 0 for a in self.hidden_layers_size)), 'Hidden layer size should be more than 0'
+
         # Training
         # TODO should also accept "cuda:1" format
         assert self.device in ('auto', 'cpu', 'cuda'), f'Not valid torch device name: {self.device}'
@@ -178,6 +189,18 @@ class Settings:
                 return True
             raise argparse.ArgumentTypeError(f'{arg_value} is not a valid boolean value')
 
+        def type_mapping(arg_value):
+            if type(arg_value) == bool:
+                return str_to_bool
+            if is_sequence(arg_value):
+                if len(arg_value) == 0:
+                    return str
+                else:
+                    return type_mapping(arg_value[0])
+
+            # Default same as current value
+            return type(arg_value)
+
         p = configargparse.get_argument_parser(default_config_files=['./settings.yaml'])
 
         # Spacial argument
@@ -191,7 +214,8 @@ class Settings:
                            f'--{name}',
                            dest=name,
                            required=False,
-                           type=str_to_bool if type(value) == bool else type(value))
+                           action='append' if is_sequence(value) else 'store',
+                           type=type_mapping(value))
 
         # TODO deal with unknown arguments with a warning
         # Load arguments form file, environment and command line to override the defaults
