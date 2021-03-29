@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, Sequence
 
 import torch
 from torch.nn import Module
@@ -9,7 +9,7 @@ from utils.output import save_network_info
 
 
 # TODO plot the network topology
-def network_metrics(network: Module, input_dim: List, device: Optional[torch.device],
+def network_metrics(network: Module, input_dim: Sequence, device: Optional[torch.device],
                     save_output: bool = True) -> dict:
     """
     Extract useful information from the network.
@@ -34,7 +34,7 @@ def network_metrics(network: Module, input_dim: List, device: Optional[torch.dev
         'trainable_params': network_info.trainable_params,
         'non_trainable_params': network_info.total_params - network_info.trainable_params,
         # 'MAC_operations': network_info.total_mult_adds, # TODO fix MAC count
-        'input_dimension': input_dim
+        'input_dimension': list(input_dim)
     }
     # TODO add layers info
     # TODO add number of bytes
