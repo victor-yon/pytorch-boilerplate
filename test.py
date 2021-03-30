@@ -44,7 +44,7 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
 
     nb_correct = 0
     nb_total = 0
-    nb_labels_predictions = np.zeros((nb_classes, nb_classes))
+    nb_labels_predictions = np.zeros((nb_classes, nb_classes), dtype=int)
 
     # Disable gradient for performances
     with torch.no_grad(), SectionTimer(f'network testing{test_name}', 'info' if final else 'debug'), \
