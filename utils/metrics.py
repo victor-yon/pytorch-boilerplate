@@ -6,21 +6,22 @@ from torchinfo import summary
 
 from utils.logger import logger
 from utils.output import save_network_info
-
-
 # TODO plot the network topology
+from utils.settings import settings
+
+
 def network_metrics(network: Module, input_dim: Sequence, device: Optional[torch.device],
                     save_output: bool = True) -> dict:
     """
     Extract useful information from the network.
 
     :param network: The network to analyse
-    :param input_dim: The dimension of the input
+    :param input_dim: The dimension of the input (without the batch size)
     :param device: The device use (cpu or cuda)
     :param save_output: If true the metrics will be saved in a text file in the run directory
     :return: A dictionary of metrics with their values
     """
-    # TODO check input info arguments
+    input_dim = [settings.batch_size] + list(input_dim)
     network_info = summary(network, input_size=input_dim, device=device, verbose=0)
 
     logger.debug('Network info:\n' + str(network_info))
