@@ -1,3 +1,4 @@
+import pickle
 import re
 from dataclasses import asdict
 from pathlib import Path
@@ -14,6 +15,7 @@ from torch.nn import Module
 from utils.logger import logger
 from utils.settings import settings
 
+CACHE_DIR = './cache'
 OUT_DIR = './out'
 OUT_FILES = {
     'settings': 'settings.yaml',
@@ -172,6 +174,19 @@ def save_network(network: Module, file_name: str = 'network') -> None:
     logger.debug(f'Network saved in {cache_path}')
 
 
+def save_data_cache(file_name: str, data: Any) -> None:
+    """
+    Save data in pickle file for later fast load.
+
+    :param file_name: The name of the cache file to write (shouldn't exist)
+    :param data: A list of items
+    """
+    Path(CACHE_DIR).mkdir(parents=True, exist_ok=True)
+    file_path = Path(CACHE_DIR, file_name)
+    pickle.dump(data, open(file_path, 'wb'))
+    logger.debug(f'Data saved in cache ({file_path})')
+
+
 def save_timers() -> None:
     """
     Save the named timers in a file in the output directory.
@@ -208,6 +223,22 @@ def load_network(network: Module, file_path: Union[str, Path]) -> bool:
         return True
     logger.warning(f'Network cache not found in "{cache_path}"')
     return False
+
+
+def load_data_cache(file_name: Path) -> Any:
+    """
+    Load data from pickle file (from previous run).
+
+    :param file_name: The name of the file to load (should exist).
+    :return: A list of items.
+    """
+    file_path = Path(CACHE_DIR, file_name)
+    if not file_path.is_file():
+        return False
+
+    data = pickle.load(open(file_path, 'rb'))
+    logger.info(f'{len(data)} items loaded from cache ({file_path})')
+    return data
 
 
 def load_run_files(dir_path: Path) -> dict:
