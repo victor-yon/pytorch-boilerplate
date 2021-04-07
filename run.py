@@ -27,7 +27,7 @@ def preparation() -> None:
     # Create the output directory to save results and plots
     init_out_directory()
 
-    if settings.run_name:
+    if settings.is_named_run():
         logger.info(f'Run name: {settings.run_name}')
 
     # Set plot style
@@ -54,7 +54,7 @@ def clean_up() -> None:
     Timer.timers.clear()
 
     # Disable the log file, so a new one can be set later
-    if settings.run_name and settings.logger_file_enable:
+    if settings.is_named_run() and settings.logger_file_enable:
         logger.disable_log_file()
 
 
