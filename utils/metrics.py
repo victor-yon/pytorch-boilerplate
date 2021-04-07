@@ -34,7 +34,7 @@ def network_metrics(network: Module, input_dim: Sequence, device: Optional[torch
         'total_params': network_info.total_params,
         'trainable_params': network_info.trainable_params,
         'non_trainable_params': network_info.total_params - network_info.trainable_params,
-        # 'MAC_operations': network_info.total_mult_adds, # TODO fix MAC count
+        'MAC_operations': network_info.total_mult_adds,
         'input_dimension': list(input_dim)
     }
     # TODO add layers info

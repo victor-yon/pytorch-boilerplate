@@ -42,7 +42,7 @@ An extendable list of settings with their default values can be found in the fil
 
 Their values can be overridden by:
 
-- the local setting file (./settings.yaml)
+- the local setting file (`./settings.yaml`)
 - the environment variables
 - the arguments of the command line (`--help` to see the list)
 
