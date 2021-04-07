@@ -30,19 +30,17 @@ def init_out_directory() -> None:
     Prepare the output directory.
     """
 
-    dir_name = settings.run_name.strip()
-
     # Skip saving if the name of the run is not set
-    if not dir_name:
+    if settings.is_unnamed_run():
         logger.warning('Nothing will be saved because the name of the run is not set. '
                        'See "run_name" in the setting file to change this behaviours.')
         return
 
-    run_dir = Path(OUT_DIR, dir_name)
+    run_dir = Path(OUT_DIR, settings.run_name)
     img_dir = run_dir / 'img'
 
     # If the keyword 'tmp' is used as run name, then remove the previous files
-    if dir_name == 'tmp':
+    if settings.is_temporary_run():
         logger.warning(f'Using temporary directory to save this run results.')
         if run_dir.exists():
             logger.warning(f'Previous temporary files removed: {run_dir}')
@@ -70,7 +68,7 @@ def init_out_directory() -> None:
         img_dir.mkdir(parents=True)
     except FileExistsError as err:
         # Clear error message about file exist
-        raise RuntimeError(f'The run name "{dir_name}" is already used in the out directory "{run_dir}". '
+        raise RuntimeError(f'The run name "{settings.run_name}" is already used in the out directory "{run_dir}". '
                            f'Change the name in the run settings to a new one or "tmp" or empty.') from err
 
     logger.debug(f'Output directory created: {run_dir}')
@@ -107,7 +105,7 @@ def save_network_info(network_metrics: dict) -> None:
     """
 
     # Skip saving if the name of the run is not set or nothing to save
-    if not settings.run_name or len(settings.run_name.strip()) == 0 or len(network_metrics) == 0:
+    if settings.is_unnamed_run() or len(network_metrics) == 0:
         return
 
     network_info_file = Path(OUT_DIR, settings.run_name, OUT_FILES['network_info'])
@@ -126,7 +124,7 @@ def save_results(**results: Any) -> None:
     """
 
     # Skip saving if the name of the run is not set
-    if not settings.run_name or len(settings.run_name.strip()) == 0:
+    if settings.is_unnamed_run():
         return
 
     results_path = Path(OUT_DIR, settings.run_name, OUT_FILES['results'])
@@ -144,7 +142,7 @@ def save_plot(file_name: str) -> None:
     """
 
     # Skip saving if the name of the run is not set
-    if not settings.run_name or len(settings.run_name.strip()) == 0:
+    if settings.is_unnamed_run():
         return
 
     save_path = Path(OUT_DIR, settings.run_name, 'img', f'{file_name}.png')
@@ -166,7 +164,7 @@ def save_network(network: Module, file_name: str = 'network') -> None:
     """
 
     # Skip saving if the name of the run is not set
-    if not settings.run_name or len(settings.run_name.strip()) == 0:
+    if settings.is_unnamed_run():
         return
 
     cache_path = Path(OUT_DIR, settings.run_name, file_name + '.p')
@@ -193,7 +191,7 @@ def save_timers() -> None:
     """
 
     # Skip saving if the name of the run is not set or nothing to save
-    if not settings.run_name or len(settings.run_name.strip()) == 0 or len(Timer.timers.data) == 0:
+    if settings.is_unnamed_run() or len(Timer.timers.data) == 0:
         return
 
     timers_file = Path(OUT_DIR, settings.run_name, OUT_FILES['timers'])

@@ -128,6 +128,22 @@ class Settings:
     # If True and the run have a valid name, save the neural network parameters in the run directory at each checkpoint.
     checkpoint_save_network: bool = False
 
+    def is_named_run(self) -> bool:
+        """ Return True only if the name of the run is set (could be a temporary name). """
+        return len(self.run_name) > 0
+
+    def is_unnamed_run(self) -> bool:
+        """ Return True only if the name of the run is NOT set. """
+        return len(self.run_name) == 0
+
+    def is_temporary_run(self) -> bool:
+        """ Return True only if the name of the run is set and is temporary name. """
+        return self.run_name == 'tmp'
+
+    def is_saved_run(self) -> bool:
+        """ Return True only if the name of the run is set and is NOT temporary name. """
+        return self.is_named_run() and not self.is_temporary_run()
+
     def validate(self):
         """
         Validate settings values, to assure integrity and prevent issues during the run.
@@ -135,6 +151,7 @@ class Settings:
         # TODO automatically check type based on type hint
 
         # General
+        assert self.run_name.strip() == self.run_name, 'The run name can\' start or end by a white character'
         assert self.run_name is None or not re.search('[/:"*?<>|\\\\]+', self.run_name), \
             'Invalid character in run name (should be a valid directory name)'
 
