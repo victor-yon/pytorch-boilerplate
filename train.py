@@ -32,6 +32,7 @@ def train(network: Module, train_dataset: Dataset, test_dataset: Dataset, device
     network.train()
 
     # Use the pyTorch data loader
+    # TODO check pin memory option when cuda enable https://pytorch.org/docs/stable/data.html#memory-pinning
     num_workers = 0 if device.type == 'cuda' else os.cpu_count()  # cuda doesn't support multithreading for data loading
     train_loader = DataLoader(train_dataset, batch_size=settings.batch_size, shuffle=True, num_workers=num_workers)
     nb_batch = len(train_loader)
