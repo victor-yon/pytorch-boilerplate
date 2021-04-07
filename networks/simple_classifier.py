@@ -22,9 +22,16 @@ class SimpleClassifier(nn.Module):
         """
         super().__init__()
 
-        self.fc1 = nn.Linear(input_size, 50)  # Input -> Hidden 1
-        self.fc2 = nn.Linear(50, 50)  # Hidden 1 -> Hidden 2
-        self.fc3 = nn.Linear(50, nb_classes)  # Hidden 2 -> Output
+        # Number of neurons per layer
+        # eg: input_size, hidden size 1, hidden size 2, ..., nb_classes
+        layers_size = [input_size]
+        layers_size.extend(settings.hidden_layers_size)
+        layers_size.append(nb_classes)
+
+        # Create fully connected linear layers
+        self.fc_layers = nn.ModuleList()
+        for i in range(len(layers_size) - 1):
+            self.fc_layers.append(nn.Linear(layers_size[i], layers_size[i + 1]))
 
         # Convert the tensor to long before to call the CrossEntropy to match with the expected data type.
         self._criterion = nn.CrossEntropyLoss()
@@ -37,10 +44,11 @@ class SimpleClassifier(nn.Module):
         :param x: One input of the dataset
         :return: The output of the network
         """
-        x = f.relu(self.fc1(x))
-        x = f.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+        # Use relu function on every layer except the last one
+        for fc in self.fc_layers[:-1]:
+            x = f.relu(fc(x))
+
+        return self.fc_layers[-1](x)
 
     def training_step(self, inputs: Any, labels: Any):
         """

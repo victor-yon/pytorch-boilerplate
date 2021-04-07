@@ -6,7 +6,7 @@ import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
-from plots.misc import plot_train_progress
+from plots.results import plot_train_progress
 from test import test
 from utils.logger import logger
 from utils.output import load_network, save_network, save_results
@@ -102,6 +102,7 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
         save_network(network, f'{batch_num:n}_checkpoint_network')
 
     # Start tests
+    test_accuracy = train_accuracy = None
     if settings.checkpoint_test_size > 0:
         test_accuracy = test(network, test_dataset, device, test_name='checkpoint test',
                              limit=settings.checkpoint_test_size)
@@ -113,8 +114,8 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
     network.train()
 
     logger.debug(f'Checkpoint {batch_num:<6n} '
-                 f'| test accuracy: {test_accuracy:5.2%} '
-                 f'| train accuracy: {train_accuracy:5.2%}')
+                 f'| test accuracy: {test_accuracy or 0:5.2%} '
+                 f'| train accuracy: {train_accuracy or 0:5.2%}')
 
     return {
         'batch_num': batch_num,

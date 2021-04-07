@@ -5,7 +5,7 @@ import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
-from plots.misc import plot_confusion_matrix
+from plots.results import plot_confusion_matrix
 from utils.logger import logger
 from utils.output import save_results
 from utils.progress_bar import ProgressBar, ProgressBarMetrics
@@ -44,7 +44,7 @@ def test(network: Module, test_dataset: Dataset, device: torch.device, test_name
 
     nb_correct = 0
     nb_total = 0
-    nb_labels_predictions = np.zeros((nb_classes, nb_classes))
+    nb_labels_predictions = np.zeros((nb_classes, nb_classes), dtype=int)
 
     # Disable gradient for performances
     with torch.no_grad(), SectionTimer(f'network testing{test_name}', 'info' if final else 'debug'), \

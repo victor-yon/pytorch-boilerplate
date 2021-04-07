@@ -13,12 +13,14 @@ echo "run_name: tmp" >> settings.yaml
 
 ## Template quick start
 
-1. In `utils/logger` at the last line, set the current project name in: `logger_name='<project name>'`.
-
-2. Create your own dataset in `datasets/` or remove the folder if you use a dataset already implemented in pytorch.
-3. Create your own neural network in `networks/`.
-4. Replace the dataset and the network in `main.py`.
-5. Run `run.py`
+1. Remove the `.idea/` directory if you don't use pyCharm IDE.
+2. In `utils/logger.py` at the last line, set the current project name in: `logger_name='<project name>'`.
+3. Create your own dataset in `datasets/` or remove the folder if you use a dataset already implemented in pytorch.
+4. Create your own neural network in `networks/`.
+5. Replace the dataset and the network in `main.py`.
+6. Remove / add settings in `utils/settings.py`
+7. Run `run.py`
+8. Update the title / description of this README file, and remove this section.
 
 ## Run
 
@@ -40,7 +42,7 @@ An extendable list of settings with their default values can be found in the fil
 
 Their values can be overridden by:
 
-- the local setting file (./settings.yaml)
+- the local setting file (`./settings.yaml`)
 - the environment variables
 - the arguments of the command line (`--help` to see the list)
 

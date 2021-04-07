@@ -15,7 +15,7 @@ def load_datasets() -> Tuple[Dataset, Dataset]:
     # TODO Load your dataset here
     # Load the training dataset
     train_dataset = MockClassificationDataset(settings.nb_classes, settings.train_point_per_class)
-    train_dataset.show_plot()  # Plot and show the data
+    train_dataset.plot()  # Plot the data
 
     # Load the testing dataset
     test_dataset = MockClassificationDataset(settings.nb_classes, settings.test_point_per_class)

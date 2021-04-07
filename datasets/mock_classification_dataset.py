@@ -1,11 +1,10 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
 import torch
 from torch.utils.data import Dataset
 
-from utils.output import save_plot
+from plots.data import plot_dataset
 
 
+# TODO create a dataset parent class
 class MockClassificationDataset(Dataset):
     """
     Randomly generate a datasets of 2 dimensional points grouped in N classes.
@@ -51,10 +50,9 @@ class MockClassificationDataset(Dataset):
         self._features = self._features.to(device=device, dtype=dtype, non_blocking=non_blocking, copy=copy)
         self._labels = self._labels.to(device=device, dtype=dtype, non_blocking=non_blocking, copy=copy)
 
-    def show_plot(self) -> None:
+    def plot(self) -> None:
         """
-        Create a plot that represent the dataset and show it.
+        Show and save (depending of settings) a visual representation of this dataset.
+        This is a shortcut of plots.data.plot_dataset.
         """
-        sns.scatterplot(x=self._features[:, 0], y=self._features[:, 1], hue=self._labels, markers=True)
-        plt.title(f'Data from {self._nb_classes} classes')
-        save_plot('mock_dataset')
+        plot_dataset(self._features, self._labels, self._nb_classes)
