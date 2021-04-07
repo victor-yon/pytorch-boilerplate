@@ -106,6 +106,7 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
         # TODO add a setting to save the network only if the accuracy is improved
 
     # Start tests
+    test_accuracy = train_accuracy = None
     if settings.checkpoint_test_size > 0:
         test_accuracy = test(network, test_dataset, device, test_name='checkpoint test',
                              limit=settings.checkpoint_test_size)
@@ -117,8 +118,8 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, test_da
     network.train()
 
     logger.debug(f'Checkpoint {batch_num:<6n} '
-                 f'| test accuracy: {test_accuracy:5.2%} '
-                 f'| train accuracy: {train_accuracy:5.2%}')
+                 f'| test accuracy: {test_accuracy or 0:5.2%} '
+                 f'| train accuracy: {train_accuracy or 0:5.2%}')
 
     return {
         'batch_num': batch_num,
