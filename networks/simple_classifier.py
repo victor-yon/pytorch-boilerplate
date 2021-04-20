@@ -67,7 +67,7 @@ class SimpleClassifier(nn.Module):
         loss.backward()
         self._optimizer.step()
 
-        return loss
+        return loss.item()
 
     def get_loss_name(self) -> str:
         """

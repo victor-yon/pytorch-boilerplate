@@ -1,3 +1,4 @@
+import gc
 import random
 
 import numpy as np
@@ -56,6 +57,10 @@ def clean_up() -> None:
     # Disable the log file, so a new one can be set later
     if settings.is_named_run() and settings.logger_file_enable:
         logger.disable_log_file()
+
+    # Free CUDA memory
+    gc.collect()
+    torch.cuda.empty_cache()
 
 
 def start_run() -> None:
@@ -119,6 +124,7 @@ def start_run() -> None:
         # TODO deal with this error in runs planner (eg. stop after a count)
     finally:
         # Clean up the environment, ready for a new run
+        del train_dataset, test_dataset, network
         clean_up()
 
 
