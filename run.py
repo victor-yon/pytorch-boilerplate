@@ -85,7 +85,10 @@ def start_run() -> None:
         with SectionTimer('run'):
             with SectionTimer('datasets loading', 'debug'):
                 # Load dataset from user function
-                train_dataset, test_dataset = load_datasets()
+                # TODO deal with optional validation set
+                train_dataset, test_dataset, validation_dataset = load_datasets()
+                logger.info(f'Datasets size: train {len(train_dataset):n} - test {len(test_dataset):n} - '
+                            f'validation {len(validation_dataset):n}')
 
             # Build network from user function
             network = build_network()
@@ -100,15 +103,17 @@ def start_run() -> None:
 
             # Send the network and the datasets to the selected device (CPU or CUDA)
             # We assume the GPU have enough memory to store the whole network and datasets. If not it should be split.
+            # FIXME find why network model takes so much memory on CUDA (and why the memory is not free at the end)
             network.to(device)
             train_dataset.to(device)
             test_dataset.to(device)
+            validation_dataset.to(device)
 
             # Save network stats and show if debug enable
             network_metrics(network, test_dataset[0][0].shape, device)
 
             # Start the training
-            train(network, train_dataset, test_dataset, device)
+            train(network, train_dataset, validation_dataset, device)
 
             # Start normal test
             test(network, test_dataset, device, final=True)

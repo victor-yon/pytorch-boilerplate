@@ -63,7 +63,8 @@ class Settings:
     save_images: bool = True
 
     # If True and the run have a valid name, save the neural network parameters in the run directory at the end of the
-    # training.
+    # training. Saved before applying early stopping if enable.
+    # The file will be at the root of run directory, under then name: "final_network.pt"
     save_network: bool = True
 
     # ==================================================================================================================
@@ -74,10 +75,13 @@ class Settings:
     nb_classes: int = 4
 
     # The number of train data generated in the mock dataset
-    train_point_per_class: int = 500
+    train_point_per_class: int = 2000
 
     # The number of test data generated in the mock dataset
-    test_point_per_class: int = 200
+    test_point_per_class: int = 500
+
+    # The number of validation data generated in the mock dataset
+    validation_point_per_class: int = 500
 
     # ==================================================================================================================
     # ==================================================== Networks ====================================================
@@ -105,25 +109,30 @@ class Settings:
     momentum: float = 0.9
 
     # The size of the mini-batch for the training and testing.
-    batch_size: int = 32
+    batch_size: int = 128
 
     # The number of training epoch.
-    nb_epoch: int = 8
+    nb_epoch: int = 20
+
+    # Save the best network state during the training based on the test accuracy.
+    # Then load it when the training is complet.
+    # The file will be at the root of run directory, under then name: "best_network.pt"
+    # Required checkpoint_train_size > 0 and checkpoint_test_size > 0
+    early_stopping: bool = True
 
     # ==================================================================================================================
     # ================================================== Checkpoints ===================================================
     # ==================================================================================================================
 
     # The number of checkpoints per training epoch, if 0 no checkpoint is processed
-    checkpoints_per_epoch: int = 0
+    checkpoints_per_epoch: int = 1
 
     # The number of data in the checkpoint training subset.
     # Set to 0 to don't compute the train accuracy during checkpoints.
-    checkpoint_train_size: int = 200
+    checkpoint_train_size: int = 1280
 
-    # The number of data in the checkpoint testing subset.
-    # Set to 0 to don't compute the test accuracy during checkpoints.
-    checkpoint_test_size: int = 200
+    # If the inference accuracy of the validation dataset should be computed, or not, during checkpoint.
+    checkpoint_validation: bool = True
 
     # If True and the run have a valid name, save the neural network parameters in the run directory at each checkpoint.
     checkpoint_save_network: bool = False

@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 
 from torch.nn import Module
 from torch.utils.data import Dataset
@@ -8,9 +8,9 @@ from networks.simple_classifier import SimpleClassifier
 from utils.settings import settings
 
 
-def load_datasets() -> Tuple[Dataset, Dataset]:
+def load_datasets() -> Union[Tuple[Dataset, Dataset], Tuple[Dataset, Dataset, Dataset]]:
     """
-    :return: The train and test datasets
+    :return: The train and test datasets. And optional validation dataset.
     """
     # Load the training dataset
     train_dataset = MockClassificationDataset(settings.nb_classes, settings.train_point_per_class)
@@ -19,7 +19,10 @@ def load_datasets() -> Tuple[Dataset, Dataset]:
     # Load the testing dataset
     test_dataset = MockClassificationDataset(settings.nb_classes, settings.test_point_per_class)
 
-    return train_dataset, test_dataset
+    # Load the validation dataset
+    validation_dataset = MockClassificationDataset(settings.nb_classes, settings.test_point_per_class)
+
+    return train_dataset, test_dataset, validation_dataset
 
 
 def build_network() -> Module:

@@ -57,7 +57,7 @@ def init_out_directory() -> None:
                 img_dir.rmdir()
 
             # Remove saved networks
-            for p_file in run_dir.glob('*.p'):
+            for p_file in run_dir.glob('*.pt'):
                 p_file.unlink()
 
             # Remove tmp directory
@@ -141,13 +141,11 @@ def save_plot(file_name: str) -> None:
     Save a plot image in the directory
     """
 
-    # Skip saving if the name of the run is not set
-    if settings.is_unnamed_run():
-        return
+    # Adjust the padding between and around subplots
+    plt.tight_layout()
 
-    save_path = Path(OUT_DIR, settings.run_name, 'img', f'{file_name}.png')
-
-    if settings.save_images:
+    if settings.is_named_run() and settings.save_images:
+        save_path = Path(OUT_DIR, settings.run_name, 'img', f'{file_name}.png')
         plt.savefig(save_path)
         logger.debug(f'Plot saved in {save_path}')
 
@@ -167,9 +165,9 @@ def save_network(network: Module, file_name: str = 'network') -> None:
     if settings.is_unnamed_run():
         return
 
-    cache_path = Path(OUT_DIR, settings.run_name, file_name + '.p')
-    torch.save(network.state_dict(), cache_path)
-    logger.debug(f'Network saved in {cache_path}')
+    save_path = Path(OUT_DIR, settings.run_name, file_name + '.pt')
+    torch.save(network.state_dict(), save_path)
+    logger.debug(f'Network saved in {save_path}')
 
 
 def save_data_cache(file_name: str, data: Any) -> None:
@@ -203,7 +201,7 @@ def save_timers() -> None:
     logger.debug(f'{len(Timer.timers.data)} timer(s) saved in {timers_file}')
 
 
-def load_network(network: Module, file_path: Union[str, Path]) -> bool:
+def load_network_(network: Module, file_path: Union[str, Path]) -> bool:
     """
     Load a full description of the network parameters and states from a previous save file.
 
@@ -221,6 +219,22 @@ def load_network(network: Module, file_path: Union[str, Path]) -> bool:
         return True
     logger.warning(f'Network cache not found in "{cache_path}"')
     return False
+
+
+def load_previous_network_version_(network: Module, version_name: str) -> bool:
+    """
+    Load a previous version of the network saved during the current run.
+
+    :param network: The network to load into (in place)
+    :param version_name: The name of the version to load (file name without the '.pt')
+    :return: True if the file exist and is loaded, False if the file is not found or the run is unnamed.
+    """
+    if settings.is_unnamed_run():
+        logger.warning('Impossible to load a previous version of this network because no name is set for this run.')
+        return False
+
+    save_path = Path(OUT_DIR, settings.run_name, version_name + '.pt')
+    return load_network_(network, save_path)
 
 
 def load_data_cache(file_name: Path) -> Any:
