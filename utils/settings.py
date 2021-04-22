@@ -117,7 +117,7 @@ class Settings:
     # Save the best network state during the training based on the test accuracy.
     # Then load it when the training is complet.
     # The file will be at the root of run directory, under then name: "best_network.pt"
-    # Required checkpoint_train_size > 0 and checkpoint_test_size > 0
+    # Required checkpoints_per_epoch > 0 and checkpoint_validation = True
     early_stopping: bool = True
 
     # ==================================================================================================================
