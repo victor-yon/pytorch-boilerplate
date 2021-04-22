@@ -7,3 +7,4 @@ torchinfo>=0.0.8
 pyyaml>=5.4.1
 pandas>=1.2.3
 codetiming>=1.2.0
+wandb>=0.10.25

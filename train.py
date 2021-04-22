@@ -3,6 +3,7 @@ from typing import List
 
 import numpy as np
 import torch
+import wandb
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
@@ -54,12 +55,13 @@ def train(network: Module, train_dataset: Dataset, validation_dataset: Dataset, 
             progress.next_subtask()
             # Iterate batches
             for i, (inputs, labels) in enumerate(train_loader):
+                batch_num = epoch * nb_batch + i
                 progress.incr()
 
                 # Checkpoint if enable for this batch
                 if i in checkpoints_i:
                     timer.pause()
-                    check_results = _checkpoint(network, epoch * nb_batch + i, train_dataset, validation_dataset,
+                    check_results = _checkpoint(network, batch_num, train_dataset, validation_dataset,
                                                 best_checkpoint, device)
                     progress.update(accuracy=check_results['validation_accuracy'])
                     accuracy_evolution.append(check_results)
@@ -69,6 +71,7 @@ def train(network: Module, train_dataset: Dataset, validation_dataset: Dataset, 
                 loss = network.training_step(inputs, labels)
                 progress.update(loss=loss)
                 loss_evolution.append(float(loss))
+                wandb.log({'loss': loss}, step=batch_num)
                 # TODO Log progress and loss based on time interval in debug
 
             # Epoch statistics
@@ -118,6 +121,7 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, validat
     # Test on a the validation dataset
     if settings.checkpoint_validation:
         validation_accuracy = test(network, validation_dataset, device, test_name='checkpoint validation', )
+        wandb.log({'validation_accuracy': validation_accuracy}, step=batch_num)
         # Check if this is the new best score
         if validation_accuracy > best_checkpoint['validation_accuracy']:
             logger.debug(f'New best validation accuracy: {validation_accuracy:5.2%}')
@@ -126,12 +130,14 @@ def _checkpoint(network: Module, batch_num: int, train_dataset: Dataset, validat
             # Save new best parameters
             if settings.early_stopping:
                 # TODO find a workaround to save it if this is an unnamed run.
+                #  (could also improve perf if not save in file)
                 save_network(network, 'best_network')
 
     # Test on a subset of train dataset
     if settings.checkpoint_train_size > 0:
         train_accuracy = test(network, train_dataset, device, test_name='checkpoint train',
                               limit=settings.checkpoint_train_size)
+        wandb.log({'train_accuracy': train_accuracy}, step=batch_num)
 
     # Set it back to train because it was switched during tests
     network.train()

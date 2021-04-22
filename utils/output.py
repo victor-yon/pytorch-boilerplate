@@ -84,6 +84,11 @@ def init_out_directory() -> None:
     logger.debug(f'Parameters saved in {parameter_file}')
 
 
+def get_run_dir() -> Path:
+    """ :return The path to the save directory of the current run """
+    return Path(OUT_DIR, settings.run_name)
+
+
 def set_plot_style():
     """
     Set plot style.

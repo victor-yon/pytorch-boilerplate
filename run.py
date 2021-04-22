@@ -13,6 +13,7 @@ from utils.metrics import network_metrics
 from utils.output import init_out_directory, save_results, save_timers, set_plot_style
 from utils.settings import settings
 from utils.timer import SectionTimer
+from utils.wandb_setup import init_wandb
 
 
 def preparation() -> None:
@@ -30,6 +31,12 @@ def preparation() -> None:
 
     if settings.is_named_run():
         logger.info(f'Run name: {settings.run_name}')
+
+    if settings.use_wandb:
+        if settings.is_saved_run():
+            init_wandb()
+        else:
+            logger.warning('Weights & Biases skipped because this is temporary or unnamed run.')
 
     # Set plot style
     set_plot_style()
@@ -57,6 +64,10 @@ def clean_up() -> None:
     # Disable the log file, so a new one can be set later
     if settings.is_named_run() and settings.logger_file_enable:
         logger.disable_log_file()
+
+    if settings.is_wandb_enable():
+        # TODO wandb stop
+        pass
 
     # Free CUDA memory
     gc.collect()
@@ -87,6 +98,7 @@ def start_run() -> None:
                 # Load dataset from user function
                 # TODO deal with optional validation set
                 train_dataset, test_dataset, validation_dataset = load_datasets()
+                # TODO data augmentation step
                 logger.info(f'Datasets size: train {len(train_dataset):n} - test {len(test_dataset):n} - '
                             f'validation {len(validation_dataset):n}')
 

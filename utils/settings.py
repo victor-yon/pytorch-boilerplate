@@ -1,4 +1,5 @@
 import argparse
+import os
 import re
 from dataclasses import asdict, dataclass
 from typing import Sequence, Union
@@ -24,6 +25,8 @@ class Settings:
     # ==================================================================================================================
     # ==================================================== General =====================================================
     # ==================================================================================================================
+
+    project_name: str = 'pytorch-boilerplate'
 
     # Name of the run to save the result ('tmp' for temporary files).
     # If empty or None thing is saved.
@@ -137,6 +140,14 @@ class Settings:
     # If True and the run have a valid name, save the neural network parameters in the run directory at each checkpoint.
     checkpoint_save_network: bool = False
 
+    # ==================================================================================================================
+    # ===================================================== W & B ======================================================
+    # ==================================================================================================================
+
+    use_wandb: bool = False
+
+    _wandb_api_key: str = ''
+
     def is_named_run(self) -> bool:
         """ Return True only if the name of the run is set (could be a temporary name). """
         return len(self.run_name) > 0
@@ -146,12 +157,16 @@ class Settings:
         return len(self.run_name) == 0
 
     def is_temporary_run(self) -> bool:
-        """ Return True only if the name of the run is set and is temporary name. """
+        """ Return True only if the name of the run is set and is a temporary name. """
         return self.run_name == 'tmp'
 
     def is_saved_run(self) -> bool:
-        """ Return True only if the name of the run is set and is NOT temporary name. """
+        """ Return True only if the name of the run is set and is NOT a temporary name. """
         return self.is_named_run() and not self.is_temporary_run()
+
+    def is_wandb_enable(self):
+        """ Return True only if the wandb api key is set and the name of the run is set and is NOT a temporary name. """
+        return len(self._wandb_api_key) > 0 and self.is_saved_run()
 
     def validate(self):
         """
@@ -188,11 +203,21 @@ class Settings:
         # Checkpoints
         assert self.checkpoints_per_epoch >= 0, 'The number of checkpoints should be >= 0'
 
+    def export_env(self) -> None:
+        """ Export some settings that need to be define in the global environment """
+        if self._wandb_api_key:
+            os.environ["WANDB_API_KEY"] = self._wandb_api_key
+
+    def get_public_dict(self) -> dict:
+        """ :return The dictionary of settings but skipping any private value (name start with '_') """
+        return {key: value for key, value in asdict(self).items() if not key.startswith('_')}
+
     def __init__(self):
         """
         Create the setting object.
         """
         self._load_file_and_cmd()
+        self.export_env()
 
     def _load_file_and_cmd(self) -> None:
         """
@@ -264,6 +289,7 @@ class Settings:
         logger.debug(f'Setting "{name}" changed from "{getattr(self, name)}" to "{value}".')
         self.__dict__[name] = value
         self.validate()
+        self.export_env()
 
     def __delattr__(self, name):
         raise AttributeError('Removing a setting is forbidden for the sake of consistency.')
@@ -272,8 +298,19 @@ class Settings:
         """
         :return: Human readable description of the settings.
         """
-        return 'Settings:\n\t' + \
-               '\n\t'.join([f'{name}: {str(value)}' for name, value in asdict(self).items()])
+
+        settings_str = []
+        for name, value in asdict(self).items():
+            if value == '':
+                value = '<empty>'
+            elif value is None:
+                value = 'None'
+            elif name.startswith('_'):
+                # Hide private values
+                value = '** secret **'
+            settings_str.append(f'{name}: {str(value)}')
+
+        return 'Settings:\n\t' + '\n\t'.join(settings_str)
 
 
 # Singleton setting object
