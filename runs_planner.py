@@ -1,15 +1,18 @@
 from run import start_run
 from utils.logger import logger
+from utils.output import ExistingRunName
 from utils.planner import BasePlanner, CombinatorPlanner, ParallelPlanner, Planner
 from utils.settings import settings
 
 
-def start_runs_planner(runs_planner: BasePlanner, skip_validation: bool = False) -> None:
+def start_runs_planner(runs_planner: BasePlanner, skip_validation: bool = False,
+                       skip_existing_runs: bool = False) -> None:
     """
     Start a list of runs.
 
     :param runs_planner: The planner that specify the settings and the order.
-    :param skip_validation: If true skip the settings validation step before real start
+    :param skip_validation: If true, skip the settings validation step before real start
+    :param skip_existing_runs: If true, skip the runs for which a directory already exist on the ouput path
     """
     # TODO add train once option
     # TODO skip existing runs names
@@ -36,13 +39,28 @@ def start_runs_planner(runs_planner: BasePlanner, skip_validation: bool = False)
 
     logger.info(f'Starting a set of {len(runs_planner)} runs with a planner')
 
+    skipped_runs = list()
+
     # At every iteration of the loop the settings will be update according to the planner current state
     for run_name in runs_planner:
         # Set the name of this run according to the planner
         # All other settings are already set during the "next" operation
         settings.run_name = run_name
-        # Start the run
-        start_run()
+        try:
+            # Start the run
+            start_run()
+        except ExistingRunName:
+            # Catch duplicate runs
+            if skip_existing_runs:
+                logger.info(f'Skip existing run {run_name}')
+                skipped_runs.append(run_name)
+            else:
+                raise
+
+    if len(skipped_runs) == 1:
+        logger.warning(f'1 existing run skipped: {skipped_runs[0]}')
+    elif len(skipped_runs) > 1:
+        logger.warning(f'{len(skipped_runs)} existing runs skipped')
 
 
 if __name__ == '__main__':

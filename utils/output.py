@@ -68,8 +68,7 @@ def init_out_directory() -> None:
         img_dir.mkdir(parents=True)
     except FileExistsError as err:
         # Clear error message about file exist
-        raise RuntimeError(f'The run name "{settings.run_name}" is already used in the out directory "{run_dir}". '
-                           f'Change the name in the run settings to a new one or "tmp" or empty.') from err
+        raise ExistingRunName(settings.run_name, run_dir) from err
 
     logger.debug(f'Output directory created: {run_dir}')
 
@@ -291,3 +290,13 @@ def load_runs(pattern: str) -> pd.DataFrame:
 
     # TODO remove columns where nothing change and return them as a vector
     return pd.DataFrame(data)
+
+
+class ExistingRunName(Exception):
+    """ Exception raised when the user try to start a run with the same name than a previous one. """
+
+    def __init__(self, run_name: str, path: Path, message: str = None):
+        if not message:
+            message = f'The run name "{run_name}" is already used in the out directory "{path}". ' \
+                      f'Change the name in the run settings to a new one or "tmp" or empty.'
+            super().__init__(message)
