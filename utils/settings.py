@@ -83,6 +83,10 @@ class Settings:
     # The number of validation data generated in the mock dataset
     validation_point_per_class: int = 500
 
+    # The number of data loader workers, to take advantage of multithreading. Always disable with CUDA.
+    # 0 means automatic setting (using cpu count).
+    nb_loader_workers: int = 0
+
     # ==================================================================================================================
     # ==================================================== Networks ====================================================
     # ==================================================================================================================
